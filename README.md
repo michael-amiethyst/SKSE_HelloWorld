@@ -13,8 +13,6 @@ Very simple C++ SKSE plugin for Skyrim!
   - [Opening the project](#opening-the-project)
 - [Project setup](#project-setup)
   - [Finding Your "`mods`" Folder](#finding-your-mods-folder)
-- [Setup your own repository](#setup-your-own-repository)
-- [Sharing is Caring](#sharing-is-caring)
 
 # What does it do?
 
@@ -73,6 +71,8 @@ into your "`mods`" folder:
 
 ## Finding Your "`mods`" Folder
 
+[//]: # (TODO - Package as .7z mod, with origin file for Vortex)
+
 In Mod Organizer 2:
 
 > Click the `...` next to "Mods" to get the full folder path
@@ -82,26 +82,3 @@ In Mod Organizer 2:
 In Vortex:
 
 <img src="https://raw.githubusercontent.com/SkyrimDev/Images/main/images/screenshots/Vortex/VortexSettingsModsFolder.png" height="150">
-
-# Setup your own repository
-
-If you clone this template on GitHub, please:
-
-- Go into `LICENSE` and change the year and change `<YOUR NAME HERE>` to your name.
-- Go into `CODE_OF_CONDUCT.md` and change `<YOUR CONTACT INFO HERE>` to your contact information.
-
-The `LICENSE` defaults to using the [MIT License](https://choosealicense.com/licenses/mit/), a permissive license which is used by many popular Skyrim mods (_including [CommonLibSSE](https://github.com/Ryan-rsm-McKenzie/CommonLibSSE)_).
-
-The `CODE_OF_CONDUCT.md` defaults to using the [Contributor Covenant](https://www.contributor-covenant.org/), the most popular code of conduct for open source communities.
-
-If you'd like to know more about open source licenses, see:
-- [Licensing a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
-- [Choose an open source license](https://choosealicense.com/)
-
-# Sharing is Caring
-
-**If you use this template, PLEASE release your project as a public open source project.** 💖
-
-**Please do not release your SKSE plugin on Nexus/etc without making the source code available** \*
-
-> \* _You do you. But please help our community by sharing your source `<3`_
