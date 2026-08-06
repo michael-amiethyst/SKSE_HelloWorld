@@ -57,7 +57,7 @@ if(DEFINED OUTPUT_FOLDER)
             # (SKSE/Plugins/...) and never contain absolute or ".." components.
             # Keep the archive outside OUTPUT_FOLDER to avoid archiving an older copy.
             COMMAND "${CMAKE_COMMAND}" -E chdir "${OUTPUT_FOLDER}"
-                    "${CMAKE_COMMAND}" -E tar cf "${PACKAGE_OUTPUT_DIR}/HelloWorld-0.1.0.7z" --format=7zip .
+                    "${CMAKE_COMMAND}" -E tar cf "${PACKAGE_OUTPUT_DIR}/${PROJECT_NAME}-${PROJECT_VERSION}-SkyrimVR.7z" --format=7zip .
             VERBATIM
     )
 
