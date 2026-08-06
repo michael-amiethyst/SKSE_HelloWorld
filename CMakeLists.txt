@@ -28,7 +28,7 @@ if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
 endif()
 
 # Otherwise, you can set OUTPUT_FOLDER to any place you'd like :)
-set(OUTPUT_FOLDER "${CMAKE_SOURCE_DIR}/build")
+set(OUTPUT_FOLDER "${CMAKE_SOURCE_DIR}/build/ModContents")
 
 # Setup your SKSE plugin as an SKSE plugin!
 find_package(CommonLibSSE CONFIG REQUIRED)
@@ -44,6 +44,7 @@ if(DEFINED OUTPUT_FOLDER)
 
     # Copy the SKSE plugin .dll files into the SKSE/Plugins/ folder
     set(DLL_FOLDER "${OUTPUT_FOLDER}/SKSE/Plugins")
+    get_filename_component(PACKAGE_OUTPUT_DIR "${OUTPUT_FOLDER}" DIRECTORY)
 
     message(STATUS "SKSE plugin output folder: ${DLL_FOLDER}")
 
@@ -52,8 +53,11 @@ if(DEFINED OUTPUT_FOLDER)
             POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E make_directory "${DLL_FOLDER}"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${PROJECT_NAME}>" "${DLL_FOLDER}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
-            # TODO make work
-#            COMMAND "${CMAKE_COMMAND}" -E tar cf "${OUTPUT_FOLDER}/HelloWorld-0.1.0.7z" --format=7zip "${OUTPUT_FOLDER}"
+            # Archive from inside the staging directory so entries are relative
+            # (SKSE/Plugins/...) and never contain absolute or ".." components.
+            # Keep the archive outside OUTPUT_FOLDER to avoid archiving an older copy.
+            COMMAND "${CMAKE_COMMAND}" -E chdir "${OUTPUT_FOLDER}"
+                    "${CMAKE_COMMAND}" -E tar cf "${PACKAGE_OUTPUT_DIR}/HelloWorld-0.1.0.7z" --format=7zip .
             VERBATIM
     )
 
