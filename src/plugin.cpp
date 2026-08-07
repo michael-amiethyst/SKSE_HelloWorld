@@ -20,12 +20,54 @@ namespace
         SKSE::log::info("SKSE HelloWorld Initialized");
     }
 
+    class LoadingMenuListener final : public RE::BSTEventSink<RE::MenuOpenCloseEvent>
+    {
+    public:
+        static LoadingMenuListener* GetSingleton()
+        {
+            static LoadingMenuListener singleton;
+            return &singleton;
+        }
+
+        void NotifyAfterLoad()
+        {
+            notificationPending = true;
+            SKSE::log::info("Notification armed; waiting for Loading Menu to close");
+        }
+
+        RE::BSEventNotifyControl ProcessEvent(
+            const RE::MenuOpenCloseEvent* event,
+            RE::BSTEventSource<RE::MenuOpenCloseEvent>*) override
+        {
+            if (event && !event->opening && event->menuName == RE::LoadingMenu::MENU_NAME &&
+                notificationPending.exchange(false)) {
+                SKSE::log::info("Loading Menu closed; queuing notification on UI thread");
+                SKSE::GetTaskInterface()->AddUITask([] {
+                    RE::DebugNotification("Hello Talos!");
+                    SKSE::log::info("DebugNotification called after Loading Menu closed");
+                });
+            }
+
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+    private:
+        std::atomic_bool notificationPending{false};
+    };
+
     SKSEPluginLoad(const SKSE::LoadInterface *skse) {
         SKSE::Init(skse);
         InitializeLogging();
 
         SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
-            if (message->type == SKSE::MessagingInterface::kPostLoadGame) {
+            if (message->type == SKSE::MessagingInterface::kInputLoaded) {
+                if (auto ui = RE::UI::GetSingleton()) {
+                    ui->AddEventSink(LoadingMenuListener::GetSingleton());
+                    SKSE::log::info("Registered Loading Menu listener");
+                } else {
+                    SKSE::log::error("UI singleton unavailable at kInputLoaded");
+                }
+            } else if (message->type == SKSE::MessagingInterface::kPostLoadGame) {
                 // SKSE stores the success flag in the pointer value itself; it is
                 // not a pointer to a bool and must never be dereferenced.
                 const auto loadSucceeded = message->data != nullptr;
@@ -34,9 +76,8 @@ namespace
                     return;
                 }
 
-                SKSE::log::info("Save game fully loaded");
-                RE::DebugNotification("Hello Talos!");
-                SKSE::log::info("DebugNotification called");
+                SKSE::log::info("SKSE save-game restoration completed");
+                LoadingMenuListener::GetSingleton()->NotifyAfterLoad();
             }
         });
 
