@@ -26,7 +26,9 @@ namespace
 
         SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
             if (message->type == SKSE::MessagingInterface::kPostLoadGame) {
-                const auto loadSucceeded = message->data && *static_cast<bool*>(message->data);
+                // SKSE stores the success flag in the pointer value itself; it is
+                // not a pointer to a bool and must never be dereferenced.
+                const auto loadSucceeded = message->data != nullptr;
                 if (!loadSucceeded) {
                     SKSE::log::warn("Save-game load failed; notification skipped");
                     return;
