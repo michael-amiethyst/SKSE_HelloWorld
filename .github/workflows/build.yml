@@ -23,8 +23,8 @@ jobs:
       - name: Install Ninja (Chocolatey)
         shell: powershell
         run: |
-          choco install ninja -y
-          refreshenv
+          choco install ninja -y 
+          Write-Host "Skipped refreshenv"
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
