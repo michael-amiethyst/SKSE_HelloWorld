@@ -16,7 +16,7 @@ project(HelloWorld VERSION 0.1.0.1 LANGUAGES CXX)
 # To do this automatically, set the `SKYRIM_FOLDER` environment variable
 # to the path of your Skyrim Special Edition folder
 if(DEFINED ENV{SKYRIM_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_FOLDER}/Data")
-    set(OUTPUT_FOLDER "$ENV{SKYRIM_FOLDER}/Data")
+    set(MOD_CONTENTS "$ENV{SKYRIM_FOLDER}/Data")
 endif()
 
 # If you're using Mod Organizer 2 or Vortex, you might want this to go inside
@@ -25,11 +25,11 @@ endif()
 # To do this automatically, set the `SKYRIM_MODS_FOLDER` environment variable
 # to the path of your "mods" folder
 if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
-    set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME}")
+    set(MOD_CONTENTS "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME}")
 endif()
 
-# Otherwise, you can set OUTPUT_FOLDER to any place you'd like :)
-set(OUTPUT_FOLDER "${CMAKE_SOURCE_DIR}/build/ModContents")
+# Otherwise, you can set MOD_CONTENTS to any place you'd like :)
+set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
 
 # Setup your SKSE plugin as an SKSE plugin!
 find_package(CommonLibSSE CONFIG REQUIRED)
@@ -39,26 +39,33 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE lib/PCH.h) # <--- PCH.h is req
 
 # When your SKSE .dll is compiled, this will automatically copy the .dll into your mods folder.
 # Only works if you configure DEPLOY_ROOT above (or set the SKYRIM_MODS_FOLDER environment variable)
-if(DEFINED OUTPUT_FOLDER)
-    # If you specify an <OUTPUT_FOLDER> (including via environment variables)
+if(DEFINED MOD_CONTENTS)
+    # If you specify an <MOD_CONTENTS> (including via environment variables)
     # then we'll copy your mod files into Skyrim or a mod manager for you!
 
     # Copy the SKSE plugin .dll files into the SKSE/Plugins/ folder
-    set(DLL_FOLDER "${OUTPUT_FOLDER}/SKSE/Plugins")
-    get_filename_component(PACKAGE_OUTPUT_DIR "${OUTPUT_FOLDER}" DIRECTORY)
+    set(DLL_FOLDER "${MOD_CONTENTS}/SKSE/Plugins")
+    set(DEPLOY_FOLDER "C:/Users/desig/iCloud/iCloudDrive/build")
+    get_filename_component(PACKAGE_OUTPUT_DIR "${MOD_CONTENTS}" DIRECTORY)
+    set(MOD_PATH "${PACKAGE_OUTPUT_DIR}/${PROJECT_NAME}-${PROJECT_VERSION}-SkyrimVR.7z")
 
     message(STATUS "SKSE plugin output folder: ${DLL_FOLDER}")
+    message(STATUS "DEPLOY_FOLDER: ${DEPLOY_FOLDER}")
 
     add_custom_command(
             TARGET "${PROJECT_NAME}"
             POST_BUILD
+            # DLL_FOLDER
             COMMAND "${CMAKE_COMMAND}" -E make_directory "${DLL_FOLDER}"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${PROJECT_NAME}>" "${DLL_FOLDER}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
             # Archive from inside the staging directory so entries are relative
             # (SKSE/Plugins/...) and never contain absolute or ".." components.
-            # Keep the archive outside OUTPUT_FOLDER to avoid archiving an older copy.
-            COMMAND "${CMAKE_COMMAND}" -E chdir "${OUTPUT_FOLDER}"
-                    "${CMAKE_COMMAND}" -E tar cf "${PACKAGE_OUTPUT_DIR}/${PROJECT_NAME}-${PROJECT_VERSION}-SkyrimVR.7z" --format=7zip .
+            # Keep the archive outside MOD_CONTENTS to avoid archiving an older copy.
+            COMMAND "${CMAKE_COMMAND}" -E chdir "${MOD_CONTENTS}"
+                    "${CMAKE_COMMAND}" -E tar cf "${MOD_PATH}" --format=7zip .
+            # DEPLOY_FOLDER
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "${DEPLOY_FOLDER}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${MOD_PATH}" "${DEPLOY_FOLDER}/"
             VERBATIM
     )
 
