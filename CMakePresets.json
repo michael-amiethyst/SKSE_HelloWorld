@@ -37,7 +37,7 @@
             "displayName": "Release",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "DEPLOY_FOLDER": "build/packages"
+                "DEPLOY_FOLDER": "${sourceDir}/build/packages"
             }
         }
     ],

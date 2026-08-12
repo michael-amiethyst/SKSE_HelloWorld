@@ -45,7 +45,6 @@ if(DEFINED MOD_CONTENTS)
 
     # Copy the SKSE plugin .dll files into the SKSE/Plugins/ folder
     set(DLL_FOLDER "${MOD_CONTENTS}/SKSE/Plugins")
-    set(DEPLOY_FOLDER "C:/Users/desig/iCloud/iCloudDrive/build")
     set(
             DEPLOY_FOLDER
             "${CMAKE_SOURCE_DIR}/build/packages"
