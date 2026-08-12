@@ -23,17 +23,6 @@ namespace
     class LoadingMenuListener final : public RE::BSTEventSink<RE::MenuOpenCloseEvent>
     {
     public:
-        static LoadingMenuListener* GetSingleton()
-        {
-            static LoadingMenuListener singleton;
-            return &singleton;
-        }
-
-        void NotifyAfterLoad()
-        {
-            notificationPending = true;
-            SKSE::log::info("Notification armed; waiting for Loading Menu to close");
-        }
 
         RE::BSEventNotifyControl ProcessEvent(
             const RE::MenuOpenCloseEvent* event,
@@ -59,25 +48,12 @@ namespace
         SKSE::Init(skse);
         InitializeLogging();
 
-        SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
-            if (message->type == SKSE::MessagingInterface::kInputLoaded) {
-                if (auto ui = RE::UI::GetSingleton()) {
-                    ui->AddEventSink(LoadingMenuListener::GetSingleton());
-                    SKSE::log::info("Registered Loading Menu listener");
-                } else {
-                    SKSE::log::error("UI singleton unavailable at kInputLoaded");
-                }
-            } else if (message->type == SKSE::MessagingInterface::kPostLoadGame) {
-                // SKSE stores the success flag in the pointer value itself; it is
-                // not a pointer to a bool and must never be dereferenced.
-                const auto loadSucceeded = message->data != nullptr;
-                if (!loadSucceeded) {
-                    SKSE::log::warn("Save-game load failed; notification skipped");
-                    return;
-                }
-
-                SKSE::log::info("SKSE save-game restoration completed");
-                LoadingMenuListener::GetSingleton()->NotifyAfterLoad();
+        SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
+            if (message->type == SKSE::MessagingInterface::kPostLoadGame && message->data != nullptr) {
+                SKSE::GetTaskInterface()->AddUITask([] {
+                    RE::DebugNotification("Hello Talos!");
+                    SKSE::log::info("DebugNotification called in kPostLoadGame");
+                });
             }
         });
 
