@@ -37,5 +37,11 @@
             "displayName": "Release",
             "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
         }
+    ],
+    "buildPresets": [
+        {
+            "name": "release",
+            "configurePreset": "release"
+        }
     ]
 }
