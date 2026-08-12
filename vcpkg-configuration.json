@@ -14,5 +14,7 @@
             ]
         }
     ],
-    "requires": "vcpkg/2022-12-14"
+    "requires": {
+        "vcpkg": "2022-12-14"
+    }
 }
