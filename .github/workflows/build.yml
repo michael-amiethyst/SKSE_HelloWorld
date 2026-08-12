@@ -24,6 +24,8 @@ jobs:
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,./vcpkg_cache,readwrite"
 
       - name: Configure
         run: cmake --preset release
