@@ -46,6 +46,12 @@ if(DEFINED MOD_CONTENTS)
     # Copy the SKSE plugin .dll files into the SKSE/Plugins/ folder
     set(DLL_FOLDER "${MOD_CONTENTS}/SKSE/Plugins")
     set(DEPLOY_FOLDER "C:/Users/desig/iCloud/iCloudDrive/build")
+    set(
+            DEPLOY_FOLDER
+            "${CMAKE_SOURCE_DIR}/build/packages"
+            CACHE PATH
+            "Directory receiving packaged releases"
+    )
     get_filename_component(PACKAGE_OUTPUT_DIR "${MOD_CONTENTS}" DIRECTORY)
     set(MOD_PATH "${PACKAGE_OUTPUT_DIR}/${PROJECT_NAME}-${PROJECT_VERSION}-SkyrimVR.7z")
 
