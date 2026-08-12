@@ -12,20 +12,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install Ninja (Chocolatey)
-        shell: powershell
-        run: choco install ninja -y
+        with:
+          submodules: recursive
 
       - name: Set up Visual Studio environment
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
 
+      - name: Install Ninja (Chocolatey)
+        shell: powershell
+        run: |
+          choco install ninja -y
+          refreshenv
+
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
         env:
           VCPKG_BINARY_SOURCES: "clear;files,./vcpkg_cache,readwrite"
+          VCPKG_FORCE_SYSTEM_BINARIES: "true"
 
       - name: Configure
         run: cmake --preset release
