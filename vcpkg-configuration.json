@@ -13,5 +13,6 @@
                 "commonlibsse-ng"
             ]
         }
-    ]
+    ],
+    "requires": "vcpkg/2022-12-14"
 }
