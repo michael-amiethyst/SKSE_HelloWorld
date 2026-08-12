@@ -13,5 +13,16 @@
                 "commonlibsse-ng"
             ]
         }
+    ],
+    "binarySources": [
+        {
+            "type": "clear"
+        },
+        {
+            "type": "files",
+            "options": {
+                "path": "./vcpkg_cache"
+            }
+        }
     ]
 }
