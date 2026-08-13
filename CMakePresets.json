@@ -2,13 +2,6 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "local-release",
-            "inherits": "release",
-            "cacheVariables": {
-                "DEPLOY_FOLDER": "C:/Users/desig/iCloud/iCloudDrive/build"
-            }
-        },
-        {
             "name": "release",
             "inherits": ["base"],
             "displayName": "Release",
