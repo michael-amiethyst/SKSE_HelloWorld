@@ -77,12 +77,10 @@ OpenVRTransportDetector::Transport OpenVRTransportDetector::GetTransport()
         return Transport::kUnknown;
     }
 
-    auto error = ETrackedPropertyError_TrackedProp_Success;
+    auto detailsEnum = ETrackedPropertyError_TrackedProp_Success;
     const auto isWireless = system->GetBoolTrackedDeviceProperty(
-        k_unTrackedDeviceIndex_Hmd,
-        ETrackedDeviceProperty_Prop_DeviceIsWireless_Bool,
-        &error);
-    if (error != ETrackedPropertyError_TrackedProp_Success) {
+        k_unTrackedDeviceIndex_Hmd, ETrackedDeviceProperty_Prop_DeviceIsWireless_Bool, &detailsEnum);
+    if (detailsEnum != ETrackedPropertyError_TrackedProp_Success) {
         return Transport::kUnknown;
     }
 

@@ -6,8 +6,7 @@
 using namespace std::chrono_literals;
 
 NotificationService::NotificationService(OpenVRTransportDetector& transportDetector) :
-    transportDetector_(transportDetector)
-{}
+    transportDetector_(transportDetector) {}
 
 NotificationService::~NotificationService()
 {
