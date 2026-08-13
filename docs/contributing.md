@@ -2,11 +2,11 @@
 
 ## Configuring a local release build
 
-Shared build settings live in `CMakePresets.json`. Keep paths and settings that
-are specific to your machine in `CMakeUserPresets.json`, which is ignored by
+Shared build settings live in `../CMakePresets.json`. Keep paths and settings that
+are specific to your machine in `../CMakeUserPresets.json`, which is ignored by
 Git.
 
-For example, create `CMakeUserPresets.json` at the repository root with a local
+For example, create `../CMakeUserPresets.json` at the repository root with a local
 release preset that inherits the shared `release` configuration:
 
 ```json
