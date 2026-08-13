@@ -1,7 +1,47 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 namespace
 {
+    using namespace std::chrono_literals;
+
+    std::jthread notificationThread;
+    std::condition_variable_any notificationTimer;
+    std::mutex notificationMutex;
+
+    void StopNotifications()
+    {
+        notificationThread.request_stop();
+        notificationTimer.notify_all();
+        if (notificationThread.joinable()) {
+            notificationThread.join();
+        }
+    }
+
+    void StartNotifications()
+    {
+        StopNotifications();
+        notificationThread = std::jthread([](std::stop_token stopToken) {
+            std::unique_lock lock(notificationMutex);
+
+            while (!stopToken.stop_requested()) {
+                notificationTimer.wait_for(lock, stopToken, 10s, [] { return false; });
+                if (stopToken.stop_requested()) {
+                    break;
+                }
+
+                SKSE::GetTaskInterface()->AddUITask([] {
+                    RE::DebugNotification("Hello Talos!");
+                    SKSE::log::info("Recurring DebugNotification called after kPostLoadGame");
+                });
+            }
+        });
+    }
+
     void InitializeLogging()
     {
         auto logDirectory = SKSE::log::log_directory();
@@ -26,10 +66,9 @@ namespace
 
         SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
             if (message->type == SKSE::MessagingInterface::kPostLoadGame && message->data != nullptr) {
-                SKSE::GetTaskInterface()->AddUITask([] {
-                    RE::DebugNotification("Hello Talos!");
-                    SKSE::log::info("DebugNotification called in kPostLoadGame");
-                });
+                StartNotifications();
+            } else if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
+                StopNotifications();
             }
         });
 
