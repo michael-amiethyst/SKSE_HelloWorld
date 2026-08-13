@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Visual Studio environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Ninja (Chocolatey)
+        shell: powershell
+        run: |
+          choco install ninja -y 
+          Write-Host "Skipped refreshenv"
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: 9e593bb18ea69cc5095e012465dcd675a822ed0d
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,./vcpkg_cache,readwrite"
+          VCPKG_FORCE_SYSTEM_BINARIES: "true"
+
+      - name: Configure
+        run: cmake --preset release
+
+      - name: Build
+        run: cmake --build --preset release
+
+      - name: Upload plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: HelloWorld-SkyrimVR
+          path: build/packages/*.7z
+          if-no-files-found: error

@@ -2,6 +2,13 @@
     "version": 3,
     "configurePresets": [
         {
+            "name": "local-release",
+            "inherits": "release",
+            "cacheVariables": {
+                "DEPLOY_FOLDER": "C:/Users/desig/iCloud/iCloudDrive/build"
+            }
+        },
+        {
             "name": "base",
             "hidden": true,
             "generator": "Ninja",
@@ -28,7 +35,16 @@
             "name": "release",
             "inherits": ["base"],
             "displayName": "Release",
-            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "DEPLOY_FOLDER": "${sourceDir}/build/packages"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "release",
+            "configurePreset": "release"
         }
     ]
 }
