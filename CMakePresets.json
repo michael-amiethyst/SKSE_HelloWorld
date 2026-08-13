@@ -9,6 +9,21 @@
             }
         },
         {
+            "name": "release",
+            "inherits": ["base"],
+            "displayName": "Release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "DEPLOY_FOLDER": "${sourceDir}/build/packages"
+            }
+        },
+        {
+            "name": "debug",
+            "inherits": ["base"],
+            "displayName": "Debug",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+        },
+        {
             "name": "base",
             "hidden": true,
             "generator": "Ninja",
@@ -23,21 +38,6 @@
                 "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake",
                 "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-            }
-        },
-        {
-            "name": "debug",
-            "inherits": ["base"],
-            "displayName": "Debug",
-            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
-        },
-        {
-            "name": "release",
-            "inherits": ["base"],
-            "displayName": "Release",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "DEPLOY_FOLDER": "${sourceDir}/build/packages"
             }
         }
     ],
