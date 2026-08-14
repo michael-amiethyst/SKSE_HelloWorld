@@ -10,6 +10,7 @@ Very simple C++ SKSE plugin for Skyrim!
 - [What does it do?](#what-does-it-do)
 - [CommonLibSSE NG](#commonlibsse-ng)
 - [Requirements](#requirements)
+  - [Runtime requirements](#runtime-requirements)
   - [Opening the project](#opening-the-project)
 - [Project setup](#project-setup)
   - [Finding Your "`mods`" Folder](#finding-your-mods-folder)
@@ -37,6 +38,12 @@ Because this uses [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSS
       Value: `C:\path\to\wherever\your\vcpkg\folder\is`
 
 <img src="https://raw.githubusercontent.com/SkyrimDev/Images/main/images/screenshots/Setting%20Environment%20Variables/VCPKG_ROOT.png" height="150">
+
+## Runtime requirements
+
+The headset-connection detector requires Skyrim VR to be running through
+[SteamVR](https://store.steampowered.com/app/250820/SteamVR/) or another fully
+compatible OpenVR runtime.  If one cannot be detected the in game messenger will be confused.
 
 ## Opening the project
 
