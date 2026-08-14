@@ -19,9 +19,9 @@ public:
     void Start();
     void Stop();
 
-private:
-    static const char* GetMessage(OpenVRTransportDetector::Transport transport);
+    static const char* GetMessage(OpenVRTransportDetector::Transport transport) noexcept;
 
+private:
     static constexpr auto message_delay_ = std::chrono::seconds{60};
 
     OpenVRTransportDetector& transportDetector_;

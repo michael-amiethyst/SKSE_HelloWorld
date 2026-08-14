@@ -20,6 +20,31 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 sta
 target_precompile_headers(${PROJECT_NAME} PRIVATE lib/PCH.h) # <--- PCH.h is required!
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
 
+include(CTest)
+if(BUILD_TESTING)
+    find_package(Catch2 3 CONFIG REQUIRED)
+
+    add_executable(
+            HelloWorldTests
+            tests/NotificationServiceTests.cpp
+            tests/OpenVRTransportDetectorTests.cpp
+            src/NotificationService.cpp
+            src/OpenVRTransportDetector.cpp
+    )
+    target_compile_features(HelloWorldTests PRIVATE cxx_std_23)
+    target_precompile_headers(HelloWorldTests PRIVATE lib/PCH.h)
+    target_include_directories(HelloWorldTests PRIVATE lib src)
+    target_link_libraries(
+            HelloWorldTests
+            PRIVATE
+            CommonLibSSE::CommonLibSSE
+            Catch2::Catch2WithMain
+    )
+
+    include(Catch)
+    catch_discover_tests(HelloWorldTests)
+endif()
+
 # When your SKSE .dll is compiled, this will automatically copy the .dll into your mods folder.
 # Only works if you configure DEPLOY_ROOT above (or set the SKYRIM_MODS_FOLDER environment variable)
 

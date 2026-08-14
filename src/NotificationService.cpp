@@ -5,16 +5,12 @@
 
 using namespace std::chrono_literals;
 
-NotificationService::NotificationService(OpenVRTransportDetector& transportDetector) :
-    transportDetector_(transportDetector) {}
+NotificationService::NotificationService(OpenVRTransportDetector& transportDetector)
+    : transportDetector_(transportDetector) {}
 
-NotificationService::~NotificationService()
-{
-    Stop();
-}
+NotificationService::~NotificationService() { Stop(); }
 
-void NotificationService::Start()
-{
+void NotificationService::Start() {
     Stop();
     thread_ = std::jthread([this](std::stop_token stopToken) {
         std::unique_lock lock(mutex_);
@@ -34,8 +30,7 @@ void NotificationService::Start()
     });
 }
 
-void NotificationService::Stop()
-{
+void NotificationService::Stop() {
     thread_.request_stop();
     timer_.notify_all();
     if (thread_.joinable()) {
@@ -43,14 +38,13 @@ void NotificationService::Stop()
     }
 }
 
-const char* NotificationService::GetMessage(OpenVRTransportDetector::Transport transport)
-{
+const char* NotificationService::GetMessage(const OpenVRTransportDetector::Transport transport) noexcept {
     switch (transport) {
-    case OpenVRTransportDetector::Transport::kWired:
-        return "Zenithar's courier travels through the earth.";
-    case OpenVRTransportDetector::Transport::kWireless:
-        return "Zenithar's courier travels through the air.";
-    default:
-        return "Zenithar's courier is confused";
+        case OpenVRTransportDetector::Transport::kWired:
+            return "Zenithar's courier travels through the earth.";
+        case OpenVRTransportDetector::Transport::kWireless:
+            return "Zenithar's courier travels through the air.";
+        default:
+            return "Zenithar's courier is confused";
     }
 }

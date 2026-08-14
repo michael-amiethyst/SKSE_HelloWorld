@@ -20,6 +20,10 @@ public:
 
     Transport GetTransport();
 
+    // Converts the OpenVR property result into the public transport state.
+    // Kept separate from DLL access so the decision can be tested without OpenVR.
+    static Transport DetermineTransport(bool propertyReadSucceeded, bool isWireless) noexcept;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;
