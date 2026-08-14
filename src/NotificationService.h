@@ -2,6 +2,7 @@
 
 #include "OpenVRTransportDetector.h"
 
+#include <chrono>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
@@ -20,6 +21,8 @@ public:
 
 private:
     static const char* GetMessage(OpenVRTransportDetector::Transport transport);
+
+    static constexpr auto message_delay_ = std::chrono::seconds{60};
 
     OpenVRTransportDetector& transportDetector_;
     std::jthread thread_;

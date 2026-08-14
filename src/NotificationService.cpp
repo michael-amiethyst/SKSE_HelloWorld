@@ -20,7 +20,7 @@ void NotificationService::Start()
         std::unique_lock lock(mutex_);
 
         while (!stopToken.stop_requested()) {
-            timer_.wait_for(lock, stopToken, 10s, [] { return false; });
+            timer_.wait_for(lock, stopToken, message_delay_, [] { return false; });
             if (stopToken.stop_requested()) {
                 break;
             }
