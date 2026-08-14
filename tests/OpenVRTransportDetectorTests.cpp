@@ -4,16 +4,16 @@
 
 TEST_CASE("OpenVR transport is unknown when its property cannot be read")
 {
-    CHECK(OpenVRTransportDetector::DetermineTransport(false, false) ==
+    CHECK(OpenVRTransportDetector::DetermineTransport_(false, false) ==
           OpenVRTransportDetector::Transport::kUnknown);
-    CHECK(OpenVRTransportDetector::DetermineTransport(false, true) ==
+    CHECK(OpenVRTransportDetector::DetermineTransport_(false, true) ==
           OpenVRTransportDetector::Transport::kUnknown);
 }
 
 TEST_CASE("OpenVR transport follows a successfully read wireless property")
 {
-    CHECK(OpenVRTransportDetector::DetermineTransport(true, false) ==
+    CHECK(OpenVRTransportDetector::DetermineTransport_(true, false) ==
           OpenVRTransportDetector::Transport::kWired);
-    CHECK(OpenVRTransportDetector::DetermineTransport(true, true) ==
+    CHECK(OpenVRTransportDetector::DetermineTransport_(true, true) ==
           OpenVRTransportDetector::Transport::kWireless);
 }

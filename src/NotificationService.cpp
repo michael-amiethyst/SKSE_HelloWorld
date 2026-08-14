@@ -21,7 +21,7 @@ void NotificationService::Start() {
                 break;
             }
 
-            auto message = std::string(GetMessage(transportDetector_.GetTransport()));
+            auto message = std::string(GetMessage_(transportDetector_.GetTransport()));
             SKSE::GetTaskInterface()->AddUITask([message = std::move(message)] {
                 RE::DebugNotification(message.c_str());
                 SKSE::log::info("{}", message);
@@ -38,7 +38,7 @@ void NotificationService::Stop() {
     }
 }
 
-const char* NotificationService::GetMessage(const OpenVRTransportDetector::Transport transport) noexcept {
+const char* NotificationService::GetMessage_(const OpenVRTransportDetector::Transport transport) noexcept {
     switch (transport) {
         case OpenVRTransportDetector::Transport::kWired:
             return "Zenithar's courier travels through the earth.";
