@@ -1,7 +1,13 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include "NotificationService.h"
+#include "OpenVRTransportDetector.h"
+
 namespace
 {
+    OpenVRTransportDetector transportDetector;
+    NotificationService notificationService(transportDetector);
+
     void InitializeLogging()
     {
         auto logDirectory = SKSE::log::log_directory();
@@ -20,16 +26,16 @@ namespace
         SKSE::log::info("SKSE HelloWorld Initialized");
     }
 
+    /** Plugin's main */
     SKSEPluginLoad(const SKSE::LoadInterface *skse) {
         SKSE::Init(skse);
         InitializeLogging();
 
         SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
             if (message->type == SKSE::MessagingInterface::kPostLoadGame && message->data != nullptr) {
-                SKSE::GetTaskInterface()->AddUITask([] {
-                    RE::DebugNotification("Hello Talos!");
-                    SKSE::log::info("DebugNotification called in kPostLoadGame");
-                });
+                notificationService.Start();
+            } else if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
+                notificationService.Stop();
             }
         });
 
