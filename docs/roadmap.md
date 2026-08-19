@@ -1,6 +1,6 @@
 # Project Plan
 
-Change to warnings on high CPU/Memory/Disk usage.
+Emit message on high CPU/Memory/Disk/Network usage.
 
 Config menu for polling frequency
 
