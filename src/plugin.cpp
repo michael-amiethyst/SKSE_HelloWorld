@@ -21,8 +21,8 @@ namespace
 
         spdlog::set_default_logger(std::move(logger));
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
-        spdlog::set_level(spdlog::level::info);
-        spdlog::flush_on(spdlog::level::info);
+        spdlog::set_level(spdlog::level::debug);
+        spdlog::flush_on(spdlog::level::debug);
         SKSE::log::info("SKSE HelloWorld Initialized");
     }
 

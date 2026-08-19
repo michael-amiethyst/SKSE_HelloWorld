@@ -23,7 +23,7 @@ public:
     static const char* GetMessage_(OpenVRTransportDetector::Transport transport) noexcept;
 
 private:
-    static constexpr auto message_delay_ = std::chrono::seconds{60};
+    static constexpr auto message_delay_ = std::chrono::minutes{3};
 
     OpenVRTransportDetector& transportDetector_;
     std::jthread thread_;

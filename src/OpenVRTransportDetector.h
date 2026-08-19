@@ -18,7 +18,7 @@ public:
     OpenVRTransportDetector(const OpenVRTransportDetector&) = delete;
     OpenVRTransportDetector& operator=(const OpenVRTransportDetector&) = delete;
 
-    Transport GetTransport();
+    Transport GetTransport() const;
 
     // Converts the OpenVR property result into the public transport state.
     // VisibleForTesting
