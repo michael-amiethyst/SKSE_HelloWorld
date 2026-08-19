@@ -12,7 +12,7 @@ NotificationService::~NotificationService() { Stop(); }
 
 void NotificationService::Start() {
     Stop();
-    thread_ = std::jthread([this](std::stop_token stopToken) {
+    thread_ = std::jthread([this](const std::stop_token& stopToken) {
         std::unique_lock lock(mutex_);
 
         while (!stopToken.stop_requested()) {
