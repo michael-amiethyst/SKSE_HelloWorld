@@ -103,7 +103,11 @@ OpenVRTransportDetector::Transport OpenVRTransportDetector::GetTransport() const
     auto detailsEnum = ETrackedPropertyError_TrackedProp_Success;
     const auto isWireless = system->GetBoolTrackedDeviceProperty(
         k_unTrackedDeviceIndex_Hmd, ETrackedDeviceProperty_Prop_DeviceIsWireless_Bool, &detailsEnum);
-    if (detailsEnum != ETrackedPropertyError_TrackedProp_Success) {
+    if (detailsEnum == ETrackedPropertyError_TrackedProp_UnknownProperty) {
+        // under Meta Horizon Link app DeviceIsWireless isn't even exposed
+        SKSE::log::warn("DeviceIsWireless property was not found, assuming wired connection");
+        return Transport::kWired;
+    } else if (detailsEnum != ETrackedPropertyError_TrackedProp_Success) {
         SKSE::log::error(
             "OpenVR transport detection failed: Prop_DeviceIsWireless_Bool for HMD returned property error {}",
             static_cast<int>(detailsEnum));
