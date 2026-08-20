@@ -2,6 +2,6 @@
 
 Emit message on high CPU/Memory/Disk/Network usage.
 
-Config menu for polling frequency
+Rename project
 
 Post to Nexus?
