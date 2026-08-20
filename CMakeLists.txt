@@ -7,6 +7,7 @@ set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
 
 # Setup your SKSE plugin as an SKSE plugin!
 find_package(CommonLibSSE CONFIG REQUIRED)
+find_package(SimpleIni CONFIG REQUIRED)
 add_commonlibsse_plugin(
         ${PROJECT_NAME}
         SOURCES
@@ -19,6 +20,7 @@ add_commonlibsse_plugin(
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 standard
 target_precompile_headers(${PROJECT_NAME} PRIVATE lib/PCH.h) # <--- PCH.h is required!
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE SimpleIni::SimpleIni)
 
 include(CTest)
 if(BUILD_TESTING)
@@ -39,6 +41,7 @@ if(BUILD_TESTING)
             PRIVATE
             CommonLibSSE::CommonLibSSE
             Catch2::Catch2WithMain
+            SimpleIni::SimpleIni
     )
 
     include(Catch)
