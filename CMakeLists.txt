@@ -11,6 +11,8 @@ find_package(SimpleIni CONFIG REQUIRED)
 add_commonlibsse_plugin(
         ${PROJECT_NAME}
         SOURCES
+        src/MCMHelperAPI.cpp
+        src/MCMHelperAPI.h
         src/NotificationService.cpp
         src/NotificationService.h
         src/HeadMountedDisplay.cpp
@@ -28,8 +30,10 @@ if(BUILD_TESTING)
 
     add_executable(
             HelloWorldTests
+            tests/MCMHelperAPITests.cpp
             tests/NotificationServiceTests.cpp
             tests/OpenVRTransportDetectorTests.cpp
+            src/MCMHelperAPI.cpp
             src/NotificationService.cpp
             src/HeadMountedDisplay.cpp
     )
