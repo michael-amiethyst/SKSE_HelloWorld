@@ -5,7 +5,7 @@
 
 using namespace std::chrono_literals;
 
-NotificationService::NotificationService(OpenVRTransportDetector& transportDetector)
+NotificationService::NotificationService(HeadMountedDisplay& transportDetector)
     : transportDetector_(transportDetector) {}
 
 NotificationService::~NotificationService() { Stop(); }
@@ -38,11 +38,11 @@ void NotificationService::Stop() {
     }
 }
 
-const char* NotificationService::GetMessage_(const OpenVRTransportDetector::Transport transport) noexcept {
+const char* NotificationService::GetMessage_(const HeadMountedDisplay::Transport transport) noexcept {
     switch (transport) {
-        case OpenVRTransportDetector::Transport::kWired:
+        case HeadMountedDisplay::Transport::kWired:
             return "Zenithar's courier travels through the earth.";
-        case OpenVRTransportDetector::Transport::kWireless:
+        case HeadMountedDisplay::Transport::kWireless:
             return "Zenithar's courier travels through the air.";
         default:
             return "Zenithar's courier is confused";

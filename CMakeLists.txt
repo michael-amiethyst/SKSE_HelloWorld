@@ -13,8 +13,8 @@ add_commonlibsse_plugin(
         SOURCES
         src/NotificationService.cpp
         src/NotificationService.h
-        src/OpenVRTransportDetector.cpp
-        src/OpenVRTransportDetector.h
+        src/HeadMountedDisplay.cpp
+        src/HeadMountedDisplay.h
         src/plugin.cpp
 )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 standard
@@ -31,7 +31,7 @@ if(BUILD_TESTING)
             tests/NotificationServiceTests.cpp
             tests/OpenVRTransportDetectorTests.cpp
             src/NotificationService.cpp
-            src/OpenVRTransportDetector.cpp
+            src/HeadMountedDisplay.cpp
     )
     target_compile_features(HelloWorldTests PRIVATE cxx_std_23)
     target_precompile_headers(HelloWorldTests PRIVATE lib/PCH.h)

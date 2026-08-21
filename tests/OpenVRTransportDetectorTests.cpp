@@ -1,19 +1,19 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "OpenVRTransportDetector.h"
+#include "HeadMountedDisplay.h"
 
 TEST_CASE("OpenVR transport is unknown when its property cannot be read")
 {
-    CHECK(OpenVRTransportDetector::DetermineTransport_(false, false) ==
-          OpenVRTransportDetector::Transport::kUnknown);
-    CHECK(OpenVRTransportDetector::DetermineTransport_(false, true) ==
-          OpenVRTransportDetector::Transport::kUnknown);
+    CHECK(HeadMountedDisplay::DetermineTransport_(false, false) ==
+          HeadMountedDisplay::Transport::kUnknown);
+    CHECK(HeadMountedDisplay::DetermineTransport_(false, true) ==
+          HeadMountedDisplay::Transport::kUnknown);
 }
 
 TEST_CASE("OpenVR transport follows a successfully read wireless property")
 {
-    CHECK(OpenVRTransportDetector::DetermineTransport_(true, false) ==
-          OpenVRTransportDetector::Transport::kWired);
-    CHECK(OpenVRTransportDetector::DetermineTransport_(true, true) ==
-          OpenVRTransportDetector::Transport::kWireless);
+    CHECK(HeadMountedDisplay::DetermineTransport_(true, false) ==
+          HeadMountedDisplay::Transport::kWired);
+    CHECK(HeadMountedDisplay::DetermineTransport_(true, true) ==
+          HeadMountedDisplay::Transport::kWireless);
 }

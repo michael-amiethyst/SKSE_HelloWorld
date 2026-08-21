@@ -1,11 +1,11 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include "HeadMountedDisplay.h"
 #include "NotificationService.h"
-#include "OpenVRTransportDetector.h"
 
 namespace
 {
-    OpenVRTransportDetector transportDetector;
+    HeadMountedDisplay transportDetector;
     NotificationService notificationService(transportDetector);
 
     void InitializeLogging()
