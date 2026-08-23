@@ -5,6 +5,61 @@ project(HelloWorld VERSION 0.3.0 LANGUAGES CXX)
 
 set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
 
+find_program(POWERSHELL_EXECUTABLE NAMES pwsh powershell REQUIRED)
+find_program(
+        DOTNET_EXECUTABLE
+        NAMES dotnet
+        HINTS "${CMAKE_SOURCE_DIR}/build/tools/dotnet"
+        REQUIRED
+)
+execute_process(
+        COMMAND "${DOTNET_EXECUTABLE}" --list-sdks
+        OUTPUT_VARIABLE DOTNET_SDKS
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(DOTNET_SDKS STREQUAL "")
+    message(FATAL_ERROR "Spriggit requires a .NET SDK. Install .NET 9 SDK or set DOTNET_EXECUTABLE.")
+endif()
+
+set(MOD_PLUGIN "${MOD_CONTENTS}/HelloWorld.esp")
+set(MOD_PEX "${MOD_CONTENTS}/Scripts/HelloWorldMCM.pex")
+set(MOD_MCM_CONFIG "${MOD_CONTENTS}/MCM/Config/HelloWorld/config.json")
+set(MOD_MCM_DEFAULTS "${MOD_CONTENTS}/MCM/Config/HelloWorld/settings.ini")
+
+add_custom_command(
+        OUTPUT
+        "${MOD_PLUGIN}"
+        "${MOD_PEX}"
+        "${MOD_MCM_CONFIG}"
+        "${MOD_MCM_DEFAULTS}"
+        COMMAND
+        "${POWERSHELL_EXECUTABLE}"
+        -NoProfile
+        -ExecutionPolicy Bypass
+        -File "${CMAKE_SOURCE_DIR}/cmake/BuildModAssets.ps1"
+        -SourceDirectory "${CMAKE_SOURCE_DIR}"
+        -BinaryDirectory "${CMAKE_BINARY_DIR}"
+        -ModContentsDirectory "${MOD_CONTENTS}"
+        -DotnetExecutable "${DOTNET_EXECUTABLE}"
+        DEPENDS
+        "${CMAKE_SOURCE_DIR}/cmake/BuildModAssets.ps1"
+        "${CMAKE_SOURCE_DIR}/scripts/Source/HelloWorldMCM.psc"
+        "${CMAKE_SOURCE_DIR}/scripts/SkyrimPapyrusFlags.flg"
+        "${CMAKE_SOURCE_DIR}/plugin/HelloWorld/spriggit-meta.json"
+        "${CMAKE_SOURCE_DIR}/plugin/HelloWorld/RecordData.yaml"
+        "${CMAKE_SOURCE_DIR}/plugin/HelloWorld/Quests/HelloWorld MCM Quest - 000800_HelloWorld.esp.yaml"
+        "${CMAKE_SOURCE_DIR}/mcm/Config/HelloWorld/config.json"
+        "${CMAKE_SOURCE_DIR}/mcm/Config/HelloWorld/settings.ini"
+        COMMENT "Building Creation-Kit-free Papyrus and plugin assets"
+        VERBATIM
+)
+add_custom_target(HelloWorldAssets DEPENDS
+        "${MOD_PLUGIN}"
+        "${MOD_PEX}"
+        "${MOD_MCM_CONFIG}"
+        "${MOD_MCM_DEFAULTS}"
+)
+
 # Setup your SKSE plugin as an SKSE plugin!
 find_package(CommonLibSSE CONFIG REQUIRED)
 find_package(SimpleIni CONFIG REQUIRED)
@@ -23,6 +78,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 sta
 target_precompile_headers(${PROJECT_NAME} PRIVATE lib/PCH.h) # <--- PCH.h is required!
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE SimpleIni::SimpleIni)
+add_dependencies(${PROJECT_NAME} HelloWorldAssets)
 
 include(CTest)
 if(BUILD_TESTING)

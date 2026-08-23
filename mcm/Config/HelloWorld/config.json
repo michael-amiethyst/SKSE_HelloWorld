@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Exit-9B/MCM-Helper/main/docs/config.schema.json",
+  "modName": "HelloWorld",
+  "displayName": "Hello World",
+  "minMcmVersion": 13,
+  "content": [
+    {
+      "type": "header",
+      "text": "General"
+    },
+    {
+      "id": "iMessageDelay:General",
+      "text": "Message delay",
+      "help": "Seconds between headset connection notifications.",
+      "type": "slider",
+      "valueOptions": {
+        "min": 10,
+        "max": 600,
+        "step": 10,
+        "formatString": "{0} seconds",
+        "sourceType": "ModSettingInt"
+      }
+    }
+  ]
+}
