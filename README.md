@@ -28,17 +28,14 @@ included in the archive.
 - CMake 3.21 or later and Ninja
 - [vcpkg](https://github.com/microsoft/vcpkg), with `VCPKG_ROOT` set to its
   installation directory
-- PowerShell 5.1 or PowerShell 7
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) (the runtime
-  alone is not sufficient)
-- Internet access on the first asset build
 
-The Creation Kit, Skyrim Special Edition, and Skyrim Anniversary Edition are
-not required. CMake generates `HelloWorld.esp` from checked-in Spriggit YAML and
-compiles `HelloWorldMCM.psc` with Caprica. The build downloads hash-pinned
-versions of Spriggit, Caprica, Skyrim Papyrus source stubs, and the MCM Helper
-Papyrus SDK into the selected CMake build directory. Later builds reuse that
-cache.
+The normal C++ build does not require the Creation Kit. The compiled ESP and
+PEX are checked in under `mod/`, and CMake only stages them for packaging.
+
+The Creation Kit and its Papyrus compiler are authoring requirements when you
+change the quest in `HelloWorld.esp` or `HelloWorldMCM.psc`. After making those
+changes, replace `mod/HelloWorld.esp` and/or
+`mod/Scripts/HelloWorldMCM.pex` with the new outputs before building a release.
 
 ## Building
 
@@ -68,5 +65,5 @@ SKSE/Plugins/HelloWorld.dll
 ```
 
 For asset-only work, build the `HelloWorldAssets` target. More detail about the
-generated sources and quest attachment is in the
+checked-in assets and quest attachment is in the
 [contributing guide](docs/contributing.md).

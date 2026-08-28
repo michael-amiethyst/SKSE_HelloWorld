@@ -4,60 +4,15 @@ cmake_minimum_required(VERSION 3.21)
 project(HelloWorld VERSION 0.3.0 LANGUAGES CXX)
 
 set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
+set(MOD_SOURCE "${CMAKE_SOURCE_DIR}/mod")
 
-find_program(POWERSHELL_EXECUTABLE NAMES pwsh powershell REQUIRED)
-find_program(
-        DOTNET_EXECUTABLE
-        NAMES dotnet
-        HINTS "${CMAKE_SOURCE_DIR}/build/tools/dotnet"
-        REQUIRED
-)
-execute_process(
-        COMMAND "${DOTNET_EXECUTABLE}" --list-sdks
-        OUTPUT_VARIABLE DOTNET_SDKS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-if(DOTNET_SDKS STREQUAL "")
-    message(FATAL_ERROR "Spriggit requires a .NET SDK. Install .NET 9 SDK or set DOTNET_EXECUTABLE.")
-endif()
-
-set(MOD_PLUGIN "${MOD_CONTENTS}/HelloWorld.esp")
-set(MOD_PEX "${MOD_CONTENTS}/Scripts/HelloWorldMCM.pex")
-set(MOD_MCM_CONFIG "${MOD_CONTENTS}/MCM/Config/HelloWorld/config.json")
-set(MOD_MCM_DEFAULTS "${MOD_CONTENTS}/MCM/Config/HelloWorld/settings.ini")
-
-add_custom_command(
-        OUTPUT
-        "${MOD_PLUGIN}"
-        "${MOD_PEX}"
-        "${MOD_MCM_CONFIG}"
-        "${MOD_MCM_DEFAULTS}"
-        COMMAND
-        "${POWERSHELL_EXECUTABLE}"
-        -NoProfile
-        -ExecutionPolicy Bypass
-        -File "${CMAKE_SOURCE_DIR}/cmake/BuildModAssets.ps1"
-        -SourceDirectory "${CMAKE_SOURCE_DIR}"
-        -BinaryDirectory "${CMAKE_BINARY_DIR}"
-        -ModContentsDirectory "${MOD_CONTENTS}"
-        -DotnetExecutable "${DOTNET_EXECUTABLE}"
-        DEPENDS
-        "${CMAKE_SOURCE_DIR}/cmake/BuildModAssets.ps1"
-        "${CMAKE_SOURCE_DIR}/scripts/Source/HelloWorldMCM.psc"
-        "${CMAKE_SOURCE_DIR}/scripts/SkyrimPapyrusFlags.flg"
-        "${CMAKE_SOURCE_DIR}/plugin/HelloWorld/spriggit-meta.json"
-        "${CMAKE_SOURCE_DIR}/plugin/HelloWorld/RecordData.yaml"
-        "${CMAKE_SOURCE_DIR}/plugin/HelloWorld/Quests/HelloWorld MCM Quest - 000800_HelloWorld.esp.yaml"
-        "${CMAKE_SOURCE_DIR}/mcm/Config/HelloWorld/config.json"
-        "${CMAKE_SOURCE_DIR}/mcm/Config/HelloWorld/settings.ini"
-        COMMENT "Building Creation-Kit-free Papyrus and plugin assets"
+add_custom_target(
+        HelloWorldAssets
+        COMMAND "${CMAKE_COMMAND}" -E remove_directory "${MOD_CONTENTS}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${MOD_CONTENTS}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory "${MOD_SOURCE}" "${MOD_CONTENTS}"
+        COMMENT "Staging checked-in mod assets"
         VERBATIM
-)
-add_custom_target(HelloWorldAssets DEPENDS
-        "${MOD_PLUGIN}"
-        "${MOD_PEX}"
-        "${MOD_MCM_CONFIG}"
-        "${MOD_MCM_DEFAULTS}"
 )
 
 # Setup your SKSE plugin as an SKSE plugin!
@@ -108,10 +63,6 @@ if(BUILD_TESTING)
     catch_discover_tests(HelloWorldTests)
 endif()
 
-# When your SKSE .dll is compiled, this will automatically copy the .dll into your mods folder.
-# Only works if you configure DEPLOY_ROOT above (or set the SKYRIM_MODS_FOLDER environment variable)
-
-# Copy the SKSE plugin .dll files into the SKSE/Plugins/ folder
 set(DLL_FOLDER "${MOD_CONTENTS}/SKSE/Plugins")
 set(
         DEPLOY_FOLDER
@@ -125,20 +76,16 @@ set(MOD_PATH "${PACKAGE_OUTPUT_DIR}/${PROJECT_NAME}-${PROJECT_VERSION}-SkyrimVR.
 message(STATUS "SKSE plugin output folder: ${DLL_FOLDER}")
 message(STATUS "DEPLOY_FOLDER: ${DEPLOY_FOLDER}")
 
-add_custom_command(
-        TARGET "${PROJECT_NAME}"
-        POST_BUILD
-        # DLL_FOLDER
+add_custom_target(
+        HelloWorldPackage ALL
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${DLL_FOLDER}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${PROJECT_NAME}>" "${DLL_FOLDER}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
-        # Archive from inside the staging directory so entries are relative
-        # (SKSE/Plugins/...) and never contain absolute or ".." components.
-        # Keep the archive outside MOD_CONTENTS to avoid archiving an older copy.
         COMMAND "${CMAKE_COMMAND}" -E chdir "${MOD_CONTENTS}"
                 "${CMAKE_COMMAND}" -E tar cf "${MOD_PATH}" --format=7zip .
-        # DEPLOY_FOLDER
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${DEPLOY_FOLDER}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${MOD_PATH}" "${DEPLOY_FOLDER}/"
+        DEPENDS "${PROJECT_NAME}" HelloWorldAssets
+        COMMENT "Packaging HelloWorld for Skyrim VR"
         VERBATIM
 )
 
