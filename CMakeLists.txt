@@ -1,10 +1,24 @@
 cmake_minimum_required(VERSION 3.21)
 
+set(MOD_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/mod")
+set(REQUIRED_SEQ_FILE "${MOD_SOURCE}/Seq/HelloWorld.seq")
+
+if(NOT EXISTS "${REQUIRED_SEQ_FILE}")
+    message(
+            FATAL_ERROR
+            "Required SEQ file is missing: ${REQUIRED_SEQ_FILE}\n"
+            "HelloWorld's start-game-enabled MCM quest will not reliably register without it.\n"
+            "Generate the file with xEdit before building. Full instructions at \"Generating the SEQ file\" header in "
+            "${CMAKE_CURRENT_SOURCE_DIR}/docs/contributing.md\n"
+    )
+endif()
+
 # Set your project name. This will be the name of your SKSE .dll file.
 project(HelloWorld VERSION 0.3.0 LANGUAGES CXX)
 
 set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
-set(MOD_SOURCE "${CMAKE_SOURCE_DIR}/mod")
+
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${REQUIRED_SEQ_FILE}")
 
 add_custom_target(
         HelloWorldAssets

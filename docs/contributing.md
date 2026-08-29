@@ -57,6 +57,41 @@ The ESP contains a start-game-enabled quest with `HelloWorldMCM`
 attached. Its forced player alias has `SKI_PlayerLoadGameAlias` attached, which
 lets SkyUI register the menu after a game loads.
 
+### Generating the SEQ file
+
+The start-game-enabled quest requires `mod/Seq/HelloWorld.seq`. CMake stops at
+configuration time with a guided error when this file is absent.
+
+Generate it with xEdit as follows:
+
+1. Make `mod/HelloWorld.esp` visible to xEdit. If a previous build is already
+   deployed through Vortex, enable `HelloWorld.esp` in Vortex's Plugins tab.
+   Otherwise, temporarily copy `mod/HelloWorld.esp` to
+   `SkyrimVR/Data/HelloWorld.esp`.
+2. Launch `TES5VREdit.exe`. If the installation only provides `xEdit.exe`,
+   launch it with the `-TES5VR` argument.
+3. In the plugin selection window, click **Unselect All**, select
+   `HelloWorld.esp`, and click **OK**. Required masters are selected
+   automatically.
+4. Wait until the Messages pane says `Background Loader: finished`.
+5. In the left pane, right-click the top-level `HelloWorld.esp` entry and choose
+   **Other → Create SEQ File**. Some xEdit versions label this command
+   **Generate SEQ File**.
+6. Confirm that the Messages pane reports one start-enabled quest file created.
+   Generating the SEQ file does not modify the ESP, so no plugin changes need to
+   be saved when closing xEdit.
+7. Copy the generated file from
+   `SkyrimVR/Data/Seq/HelloWorld.seq` to `mod/Seq/HelloWorld.seq` in this
+   repository.
+8. If the ESP was copied into `SkyrimVR/Data` manually in step 1, remove that
+   temporary unmanaged copy before installing the packaged mod through Vortex.
+9. Commit the SEQ file and rebuild the package. Regenerate it whenever a
+   start-game-enabled quest is added to or removed from `HelloWorld.esp`.
+
+See xEdit's
+[Start-Game Enabled Quest documentation](https://tes5edit.github.io/docs/9-mod-utilities.html#s_9-7)
+for its description of the same operation.
+
 When the quest changes, save the updated plugin as `../mod/HelloWorld.esp`.
 When the Papyrus source changes, compile it with the Creation Kit's Papyrus
 compiler and replace `../mod/Scripts/HelloWorldMCM.pex`. Commit those compiled
