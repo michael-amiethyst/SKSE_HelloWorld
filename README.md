@@ -1,25 +1,36 @@
 # HelloWorld for Skyrim VR
 
 HelloWorld is an SKSE VR plugin that reports whether the active OpenVR headset
-connection is wired or wireless. It also contains the MCM Helper assets needed
-to expose the notification delay in SkyUI's Mod Configuration Menu.
+connection is wired or wireless. It includes its own menu configuration for
+exposing the notification delay through SkyUI's Mod Configuration Menu (MCM).
 
 The MCM's Papyrus script emits `HelloWorld_SettingsChanged` when the player
 changes `iMessageDelay:General`. The native plugin does not consume that event
 yet, so the slider is currently the Papyrus-facing part of the integration.
 
-## Player requirements
+## Installation and mod requirements
 
-- [Skyrim VR](https://store.steampowered.com/app/611670/The_Elder_Scrolls_V_Skyrim_VR/)
-- [SKSEVR](https://skse.silverlock.org/)
-- [SkyUI VR](https://github.com/Odie/skyui-vr)
-- The VR build of [MCM Helper](https://www.nexusmods.com/skyrimspecialedition/mods/53000)
-- [SteamVR](https://store.steampowered.com/app/250820/SteamVR/) or a fully
-  compatible OpenVR runtime
+HelloWorld requires Skyrim VR and the following separately installed mods:
 
-Install the release archive with a mod manager and make sure `HelloWorld.esp`
-is enabled. The plugin, compiled Papyrus script, and MCM configuration are all
-included in the archive.
+1. [SKSEVR](https://skse.silverlock.org/)
+2. [SkyUI VR](https://github.com/Odie/skyui-vr)
+3. The Skyrim VR build of
+   [MCM Helper](https://www.nexusmods.com/skyrimspecialedition/mods/53000),
+   version 1.4.0 or later. MCM Helper is a separate mod and is not bundled in
+   the HelloWorld archive. Select its Skyrim VR component when installing it.
+
+The headset notification also requires
+[SteamVR](https://store.steampowered.com/app/250820/SteamVR/) or a fully
+compatible OpenVR runtime.
+
+Install the requirements above first. Then install the HelloWorld release
+archive with a mod manager and make sure `HelloWorld.esp` is enabled. The
+HelloWorld native plugin, compiled Papyrus script, MCM configuration, and SEQ
+file are included in its archive.
+
+If the MCM Helper native plugin is missing or too old, HelloWorld records an
+error in `Documents/My Games/Skyrim VR/SKSE/HelloWorld.log`. MCM Helper writes
+its own `MCMHelper.log` in the same directory when it is installed and loaded.
 
 ## Build requirements
 
@@ -61,6 +72,7 @@ HelloWorld.esp
 MCM/Config/HelloWorld/config.json
 MCM/Config/HelloWorld/settings.ini
 Scripts/HelloWorldMCM.pex
+Seq/HelloWorld.seq
 SKSE/Plugins/HelloWorld.dll
 ```
 

@@ -5,13 +5,26 @@
 #include <cstdint>
 #include <filesystem>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <string_view>
+
+namespace SKSE
+{
+    class LoadInterface;
+}
 
 class MCMHelperAPI
 {
 public:
+    static constexpr std::string_view PluginName = "MCMHelper";
+    static constexpr std::uint32_t MinimumVersion = 13;
+
     explicit MCMHelperAPI(std::string modName, std::filesystem::path dataDirectory = "Data");
+
+    // Returns MCM Helper's public version code when its native SKSE plugin is loaded.
+    [[nodiscard]] static std::optional<std::uint32_t> GetRuntimeVersion(
+        const SKSE::LoadInterface& skse);
 
     // Reloads defaults and user overrides from MCM Helper's INI files.
     bool Reload();

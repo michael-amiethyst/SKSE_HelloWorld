@@ -5,6 +5,15 @@
 #include <limits>
 #include <stdexcept>
 
+std::optional<std::uint32_t> MCMHelperAPI::GetRuntimeVersion(const SKSE::LoadInterface& skse)
+{
+    const auto* pluginInfo = skse.GetPluginInfo(PluginName.data());
+    if (pluginInfo == nullptr) {
+        return std::nullopt;
+    }
+    return pluginInfo->version;
+}
+
 MCMHelperAPI::MCMHelperAPI(std::string modName, std::filesystem::path dataDirectory)
     : defaultsPath_(dataDirectory / "MCM" / "Config" / modName / "settings.ini"),
       settingsPath_(dataDirectory / "MCM" / "Settings" / (std::move(modName) + ".ini"))
