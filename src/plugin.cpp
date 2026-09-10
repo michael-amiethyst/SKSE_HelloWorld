@@ -27,33 +27,35 @@ namespace
         SKSE::log::info("SKSE HelloWorld Initialized");
     }
 
-    void LogMCMHelperStatus(const SKSE::LoadInterface& skse)
+    void LogMCMHelperStatus()
     {
-        const auto version = MCMHelperAPI::GetRuntimeVersion(skse);
-        if (!version) {
-            SKSE::log::error(
-                "Required dependency MCM Helper was not found. Install the Skyrim VR build of "
-                "MCM Helper 1.4.0 or later as a separate mod; the HelloWorld MCM will not load "
-                "without it.");
-        } else if (*version < MCMHelperAPI::MinimumVersion) {
-            SKSE::log::error(
-                "MCM Helper version code {} is loaded, but HelloWorld requires version code {} "
-                "(MCM Helper 1.4.0 or later). The HelloWorld MCM may not load.",
-                *version,
-                MCMHelperAPI::MinimumVersion);
-        } else {
-            SKSE::log::info("MCM Helper version code {} found", *version);
-        }
+        MCMHelperAPI::GetRuntimeVersion([](const std::optional<std::uint32_t> version) {
+            if (!version) {
+                SKSE::log::error(
+                    "Required dependency MCM Helper was not found. Install the Skyrim VR build "
+                    "of MCM Helper 1.4.0 or later as a separate mod; the HelloWorld MCM will not "
+                    "load without it.");
+            } else if (*version < MCMHelperAPI::MinimumVersion) {
+                SKSE::log::error(
+                    "MCM Helper version code {} is loaded, but HelloWorld requires version code "
+                    "{} (MCM Helper 1.4.0 or later). The HelloWorld MCM may not load.",
+                    *version,
+                    MCMHelperAPI::MinimumVersion);
+            } else {
+                SKSE::log::info("MCM Helper version code {} found", *version);
+            }
+        });
     }
 
     /** Plugin's main */
     SKSEPluginLoad(const SKSE::LoadInterface *skse) {
         SKSE::Init(skse);
         InitializeLogging();
-        LogMCMHelperStatus(*skse);
 
         SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
-            if (message->type == SKSE::MessagingInterface::kPostLoadGame && message->data != nullptr) {
+            if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+                LogMCMHelperStatus();
+            } else if (message->type == SKSE::MessagingInterface::kPostLoadGame && message->data != nullptr) {
                 notificationService.Start();
             } else if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
                 notificationService.Stop();

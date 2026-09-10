@@ -4,27 +4,25 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
 
-namespace SKSE
-{
-    class LoadInterface;
-}
-
 class MCMHelperAPI
 {
 public:
+    using RuntimeVersionCallback = std::function<void(std::optional<std::uint32_t>)>;
+
     static constexpr std::string_view PluginName = "MCMHelper";
     static constexpr std::uint32_t MinimumVersion = 13;
 
     explicit MCMHelperAPI(std::string modName, std::filesystem::path dataDirectory = "Data");
 
-    // Returns MCM Helper's public version code when its native SKSE plugin is loaded.
-    [[nodiscard]] static std::optional<std::uint32_t> GetRuntimeVersion(
-        const SKSE::LoadInterface& skse);
+    // Requests MCM Helper's public version code through its native Papyrus API. The callback
+    // receives nullopt when the VM or MCM.GetVersionCode is unavailable.
+    static void GetRuntimeVersion(RuntimeVersionCallback callback);
 
     // Reloads defaults and user overrides from MCM Helper's INI files.
     bool Reload();

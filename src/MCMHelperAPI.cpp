@@ -3,15 +3,57 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <stdexcept>
+#include <utility>
 
-std::optional<std::uint32_t> MCMHelperAPI::GetRuntimeVersion(const SKSE::LoadInterface& skse)
+namespace
 {
-    const auto* pluginInfo = skse.GetPluginInfo(PluginName.data());
-    if (pluginInfo == nullptr) {
-        return std::nullopt;
+    class RuntimeVersionResultCallback final : public RE::BSScript::IStackCallbackFunctor
+    {
+    public:
+        explicit RuntimeVersionResultCallback(MCMHelperAPI::RuntimeVersionCallback callback)
+            : callback_(std::move(callback))
+        {}
+
+        void operator()(RE::BSScript::Variable result) override
+        {
+            if (!result.IsInt() || result.GetSInt() < 0) {
+                callback_(std::nullopt);
+                return;
+            }
+
+            callback_(static_cast<std::uint32_t>(result.GetSInt()));
+        }
+
+        void SetObject(const RE::BSTSmartPointer<RE::BSScript::Object>&) override {}
+
+    private:
+        MCMHelperAPI::RuntimeVersionCallback callback_;
+    };
+}
+
+void MCMHelperAPI::GetRuntimeVersion(RuntimeVersionCallback callback)
+{
+    if (!callback) {
+        return;
     }
-    return pluginInfo->version;
+
+    const auto* skyrimVM = RE::SkyrimVM::GetSingleton();
+    const auto vm = skyrimVM ? skyrimVM->impl : nullptr;
+    if (!vm) {
+        callback(std::nullopt);
+        return;
+    }
+
+    RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> resultCallback{
+        new RuntimeVersionResultCallback(callback)
+    };
+    std::unique_ptr<RE::BSScript::IFunctionArguments> arguments{RE::MakeFunctionArguments()};
+
+    if (!vm->DispatchStaticCall("MCM", "GetVersionCode", arguments.get(), resultCallback)) {
+        callback(std::nullopt);
+    }
 }
 
 MCMHelperAPI::MCMHelperAPI(std::string modName, std::filesystem::path dataDirectory)
