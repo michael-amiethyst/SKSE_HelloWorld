@@ -73,8 +73,17 @@ if(BUILD_TESTING)
             SimpleIni::SimpleIni
     )
 
+    option(HELLOWORLD_TEST_COVERAGE "Enable MSVC native code coverage for HelloWorldTests" OFF)
+    if(HELLOWORLD_TEST_COVERAGE)
+        if(NOT MSVC)
+            message(FATAL_ERROR "HELLOWORLD_TEST_COVERAGE requires MSVC")
+        endif()
+        target_compile_options(HelloWorldTests PRIVATE /Od /Zi)
+        target_link_options(HelloWorldTests PRIVATE /PROFILE)
+    endif()
+
     include(Catch)
-    catch_discover_tests(HelloWorldTests)
+    catch_discover_tests(HelloWorldTests DISCOVERY_MODE PRE_TEST)
 endif()
 
 set(DLL_FOLDER "${MOD_CONTENTS}/SKSE/Plugins")

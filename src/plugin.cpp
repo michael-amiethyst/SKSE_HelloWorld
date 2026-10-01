@@ -1,5 +1,9 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <algorithm>
+#include <chrono>
+#include <string_view>
+
 #include "HeadMountedDisplay.h"
 #include "MCMHelperAPI.h"
 #include "NotificationService.h"
@@ -7,7 +11,46 @@
 namespace
 {
     HeadMountedDisplay transportDetector;
-    NotificationService notificationService(transportDetector);
+    NotificationService notificationService(
+        [] { return transportDetector.GetTransport(); },
+        [](std::string message) {
+            SKSE::GetTaskInterface()->AddUITask([message = std::move(message)] {
+                RE::DebugNotification(message.c_str());
+                SKSE::log::info("{}", message);
+            });
+        });
+    MCMHelperAPI mcmSettings("HelloWorld");
+
+    constexpr std::string_view kMessageDelaySetting = "iMessageDelay:General";
+    constexpr std::string_view kSettingsChangedEvent = "HelloWorld_SettingsChanged";
+
+    bool ApplyMessageDelaySetting()
+    {
+        if (!mcmSettings.Reload()) {
+            SKSE::log::error("Failed to load HelloWorld MCM settings; using the default delay");
+            return false;
+        }
+
+        const auto configuredDelay = mcmSettings.GetModSettingInt(kMessageDelaySetting, 180);
+        const auto delay = std::clamp(configuredDelay, 10, 600);
+        notificationService.SetMessageDelay(std::chrono::seconds{delay});
+        SKSE::log::info("HelloWorld notification delay set to {} seconds", delay);
+        return true;
+    }
+
+    class SettingsChangedEventSink final : public RE::BSTEventSink<SKSE::ModCallbackEvent>
+    {
+    public:
+        RE::BSEventNotifyControl ProcessEvent(
+            const SKSE::ModCallbackEvent* event,
+            RE::BSTEventSource<SKSE::ModCallbackEvent>*) override
+        {
+            if (event && event->eventName == kSettingsChangedEvent && event->strArg == kMessageDelaySetting) {
+                ApplyMessageDelaySetting();
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+    } settingsChangedEventSink;
 
     void InitializeLogging()
     {
@@ -52,10 +95,17 @@ namespace
         SKSE::Init(skse);
         InitializeLogging();
 
+        if (auto* eventSource = SKSE::GetModCallbackEventSource()) {
+            eventSource->AddEventSink(&settingsChangedEventSink);
+        } else {
+            SKSE::log::error("SKSE mod callback event source is unavailable; MCM changes will not apply");
+        }
+
         SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
             if (message->type == SKSE::MessagingInterface::kDataLoaded) {
                 LogMCMHelperStatus();
             } else if (message->type == SKSE::MessagingInterface::kPostLoadGame && message->data != nullptr) {
+                ApplyMessageDelaySetting();
                 notificationService.Start();
             } else if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
                 notificationService.Stop();

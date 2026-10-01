@@ -2,6 +2,12 @@
     "version": 3,
     "configurePresets": [
         {
+            "name": "coverage",
+            "inherits": "release",
+            "displayName": "Unit test coverage",
+            "cacheVariables": { "HELLOWORLD_TEST_COVERAGE": "ON" }
+        },
+        {
             "name": "release",
             "inherits": ["base"],
             "displayName": "Release",
@@ -35,6 +41,11 @@
         }
     ],
     "buildPresets": [
+        {
+            "name": "coverage",
+            "configurePreset": "coverage",
+            "targets": ["HelloWorldTests"]
+        },
         {
             "name": "release",
             "configurePreset": "release"

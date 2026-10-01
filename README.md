@@ -5,8 +5,9 @@ connection is wired or wireless. It includes its own menu configuration for
 exposing the notification delay through SkyUI's Mod Configuration Menu (MCM).
 
 The MCM's Papyrus script emits `HelloWorld_SettingsChanged` when the player
-changes `iMessageDelay:General`. The native plugin does not consume that event
-yet, so the slider is currently the Papyrus-facing part of the integration.
+changes `iMessageDelay:General`. The native plugin reloads the saved setting
+and restarts its notification timer when that event arrives, and also loads the
+saved delay whenever a game is loaded.
 
 ## Installation and mod requirements
 

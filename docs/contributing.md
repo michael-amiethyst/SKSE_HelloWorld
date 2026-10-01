@@ -43,6 +43,55 @@ ctest --test-dir build/local-release --output-on-failure
 In CLion, enable CMake Presets integration and select `local-release` as the
 CMake profile.
 
+## NotificationService tests and coverage
+
+The timer tests inject the transport lookup and notification sender, so they run
+without Skyrim or SteamVR. They use short intervals to exercise the real worker
+thread, including changes made during a countdown, repeated notifications,
+stopping, restarting, and destruction.
+
+From a Visual Studio Developer PowerShell, configure and build the coverage
+preset (with `VCPKG_ROOT` set as described in the README):
+
+```powershell
+cmake --preset coverage
+cmake --build --preset coverage
+```
+
+The coverage preset enables `HELLOWORLD_TEST_COVERAGE`, which adds debug symbols,
+disables optimization for the test target, and links it with MSVC's `/PROFILE`
+option. It does not enable instrumentation in the shipped plugin. Test discovery
+runs when CTest starts, so building the target does not execute the test binary.
+
+Run just the NotificationService cases, or the full suite:
+
+```powershell
+& .\build\coverage\HelloWorldTests.exe '[NotificationService]'
+ctest --test-dir build/coverage --output-on-failure
+```
+
+Collect coverage with the installed Visual Studio coverage tool:
+
+```powershell
+& .\scripts\MeasureNotificationServiceCoverage.ps1
+```
+
+The script finds `Microsoft.CodeCoverage.Console.exe` through the developer
+environment or `vswhere`. Supply `-CollectorPath` if it is installed elsewhere;
+use `-BuildDirectory` when collecting from another coverage-enabled build.
+The collector runs the NotificationService cases and includes only
+`src/NotificationService.cpp` and `src/NotificationService.h` in its report.
+Results are written under the build directory:
+
+- `NotificationService.tests.xml`: Catch2 JUnit results.
+- `NotificationService.cobertura.xml`: source line coverage.
+- `NotificationService.coverage-summary.md`: per-file covered and total line
+  counts, plus percentages, with duplicate line records merged.
+
+The script rejects failed tests, missing reports, and empty coverage data instead
+of reporting a percentage. Windows Application Control must allow
+`HelloWorldTests.exe` to run before tests or coverage can be collected.
+
 ## Mod assets
 
 The `HelloWorldAssets` CMake target owns the non-C++ parts of the package:

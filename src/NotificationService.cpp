@@ -2,11 +2,12 @@
 
 #include <chrono>
 #include <string>
+#include <utility>
 
-using namespace std::chrono_literals;
-
-NotificationService::NotificationService(HeadMountedDisplay& transportDetector)
-    : transportDetector_(transportDetector) {}
+NotificationService::NotificationService(TransportProvider transportProvider,
+                                         NotificationSender notificationSender)
+    : transport_provider_(std::move(transportProvider)),
+      notification_sender_(std::move(notificationSender)) {}
 
 NotificationService::~NotificationService() { Stop(); }
 
@@ -16,18 +17,30 @@ void NotificationService::Start() {
         std::unique_lock lock(mutex_);
 
         while (!stopToken.stop_requested()) {
-            timer_.wait_for(lock, stopToken, message_delay_, [] { return false; });
+            const auto generation = delay_generation_;
+            const auto delay = message_delay_;
+            const bool delayChanged = timer_.wait_for(lock, stopToken, delay, [this, generation] {
+                return delay_generation_ != generation;
+            });
             if (stopToken.stop_requested()) {
                 break;
             }
+            if (delayChanged) {
+                continue;
+            }
 
-            auto message = std::string(GetMessage_(transportDetector_.GetTransport()));
-            SKSE::GetTaskInterface()->AddUITask([message = std::move(message)] {
-                RE::DebugNotification(message.c_str());
-                SKSE::log::info("{}", message);
-            });
+            notification_sender_(std::string(GetMessage_(transport_provider_())));
         }
     });
+}
+
+void NotificationService::SetMessageDelay(const std::chrono::steady_clock::duration delay) {
+    {
+        std::scoped_lock lock(mutex_);
+        message_delay_ = delay;
+        ++delay_generation_;
+    }
+    timer_.notify_all();
 }
 
 void NotificationService::Stop() {
