@@ -1,5 +1,7 @@
 #include "NotificationService.h"
+#include "MCMHelperAPI.h"
 
+#include <algorithm>
 #include <chrono>
 #include <string>
 #include <utility>
@@ -29,9 +31,28 @@ void NotificationService::Start() {
                 continue;
             }
 
-            notification_sender_(std::string(GetMessage_(transport_provider_())));
+            notification_sender_(message_text_.empty() ? std::string(GetMessage_(transport_provider_()))
+                                                       : message_text_);
         }
     });
+}
+
+void NotificationService::SetMessageText(std::string text) {
+    if (text.find_first_not_of(" \t\r\n\f\v") == std::string::npos) {
+        text.clear();
+    }
+    std::scoped_lock lock(mutex_);
+    message_text_ = std::move(text);
+}
+
+bool NotificationService::ReloadSettings(MCMHelperAPI& settings) {
+    if (!settings.Reload()) {
+        return false;
+    }
+    SetMessageText(settings.GetModSettingString("sMessageText:General", ""));
+    SetMessageDelay(std::chrono::seconds{
+        std::clamp(settings.GetModSettingInt("iMessageDelay:General", 180), 10, 600)});
+    return true;
 }
 
 void NotificationService::SetMessageDelay(const std::chrono::steady_clock::duration delay) {

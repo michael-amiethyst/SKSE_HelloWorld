@@ -1,8 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "NotificationService.h"
+#include "MCMHelperAPI.h"
 
 #include <chrono>
+#include <filesystem>
+#include <fstream>
 #include <condition_variable>
 #include <mutex>
 #include <string>
@@ -218,4 +221,73 @@ TEST_CASE("NotificationService destruction stops further notifications", "[Notif
     }
     const auto stoppedCount = probe.Count();
     CHECK_FALSE(probe.WaitForCount(stoppedCount + 1, 100ms));
+}
+
+TEST_CASE("NotificationService overrides every transport and restores defaults for blank text",
+          "[NotificationService]")
+{
+    for (const auto transport : {HeadMountedDisplay::Transport::kWired,
+                                 HeadMountedDisplay::Transport::kWireless,
+                                 HeadMountedDisplay::Transport::kUnknown}) {
+        NotificationProbe probe;
+        NotificationService service([transport] { return transport; },
+            [&probe](std::string text) { probe.Record(std::move(text)); });
+        service.SetMessageDelay(20ms);
+        service.SetMessageText("  Custom message!  ");
+        service.Start();
+        REQUIRE(probe.WaitForCount(1, 1s));
+        service.Stop();
+        CHECK(probe.At(0).message == "  Custom message!  ");
+        for (const std::string text : {"", " \t\r\n\f\v"}) {
+            service.SetMessageText(text);
+            const auto count = probe.Count();
+            service.Start();
+            REQUIRE(probe.WaitForCount(count + 1, 1s));
+            service.Stop();
+            CHECK(probe.At(count).message == NotificationService::GetMessage_(transport));
+        }
+    }
+}
+
+TEST_CASE("MCM Helper reloads notification text while NotificationService is running",
+          "[NotificationService][MCMHelperAPI][integration]")
+{
+    struct TestDirectory {
+        std::filesystem::path path = std::filesystem::temp_directory_path() /
+            ("HelloWorld-Notifications-" + std::to_string(Clock::now().time_since_epoch().count()));
+        ~TestDirectory() { std::filesystem::remove_all(path); }
+    } data;
+    const auto defaults = data.path / "MCM/Config/HelloWorld/settings.ini";
+    const auto overrides = data.path / "MCM/Settings/HelloWorld.ini";
+    std::filesystem::create_directories(defaults.parent_path());
+    std::filesystem::create_directories(overrides.parent_path());
+    std::ofstream(defaults) << "[General]\niMessageDelay=180\nsMessageText=\n";
+    MCMHelperAPI settings("HelloWorld", data.path);
+    NotificationProbe probe;
+    auto service = MakeService(probe);
+    REQUIRE(service.ReloadSettings(settings));
+    service.SetMessageDelay(20ms);
+    service.Start();
+    REQUIRE(probe.WaitForCount(1, 1s));
+    CHECK(probe.At(0).message == NotificationService::GetMessage_(HeadMountedDisplay::Transport::kWireless));
+
+    for (const std::string text : {"Custom courier", "Replacement", "", "   "}) {
+        std::ofstream(overrides) << "[General]\nsMessageText=" << text << '\n';
+        REQUIRE(service.ReloadSettings(settings));
+        // Production clamps delays to at least ten seconds; accelerate only the timer for this test.
+        service.SetMessageDelay(20ms);
+        const auto count = probe.Count();
+        REQUIRE(probe.WaitForCount(count + 1, 1s));
+        CHECK(probe.At(count).message == (text.find_first_not_of(' ') == std::string::npos
+            ? NotificationService::GetMessage_(HeadMountedDisplay::Transport::kWireless) : text));
+    }
+    service.Stop();
+
+    std::filesystem::remove(overrides);
+    REQUIRE(service.ReloadSettings(settings));
+    CHECK(settings.GetModSettingString("sMessageText:General", "missing").empty());
+    // An unreadable INI must report failure rather than applying partial defaults.
+    std::filesystem::remove(defaults);
+    std::filesystem::create_directory(defaults);
+    CHECK_FALSE(service.ReloadSettings(settings));
 }

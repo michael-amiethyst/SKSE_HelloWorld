@@ -35,7 +35,7 @@ namespace
     }
 }
 
-TEST_CASE("MCM Helper API overlays player settings on config defaults")
+TEST_CASE("MCM Helper API overlays player settings on config defaults", "[MCMHelperAPI]")
 {
     const TestDataDirectory data;
     WriteFile(data.Get() / "MCM" / "Config" / "HelloWorld" / "settings.ini",
@@ -52,7 +52,7 @@ TEST_CASE("MCM Helper API overlays player settings on config defaults")
     CHECK(api.GetModSettingString("sLabel:General", "missing") == "player");
 }
 
-TEST_CASE("MCM Helper API returns caller defaults when settings files are absent")
+TEST_CASE("MCM Helper API returns caller defaults when settings files are absent", "[MCMHelperAPI]")
 {
     const TestDataDirectory data;
     MCMHelperAPI api("HelloWorld", data.Get());
@@ -62,7 +62,7 @@ TEST_CASE("MCM Helper API returns caller defaults when settings files are absent
     CHECK(api.GetModSettingString("sLabel:General", "fallback") == "fallback");
 }
 
-TEST_CASE("MCM Helper API rejects malformed setting IDs")
+TEST_CASE("MCM Helper API rejects malformed setting IDs", "[MCMHelperAPI]")
 {
     const TestDataDirectory data;
     MCMHelperAPI api("HelloWorld", data.Get());

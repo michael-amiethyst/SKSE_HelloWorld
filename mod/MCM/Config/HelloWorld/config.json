@@ -20,6 +20,15 @@
         "formatString": "{0} seconds",
         "sourceType": "ModSettingInt"
       }
+    },
+    {
+      "id": "sMessageText:General",
+      "text": "Message Text",
+      "help": "Custom notification text for headcanon, notes or reminders. When blank the default headset connection messages display.",
+      "type": "input",
+      "valueOptions": {
+        "sourceType": "ModSettingString"
+      }
     }
   ]
 }

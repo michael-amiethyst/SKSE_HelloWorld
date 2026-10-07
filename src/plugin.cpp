@@ -1,7 +1,5 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
-#include <algorithm>
-#include <chrono>
 #include <string_view>
 
 #include "HeadMountedDisplay.h"
@@ -22,19 +20,17 @@ namespace
     MCMHelperAPI mcmSettings("HelloWorld");
 
     constexpr std::string_view kMessageDelaySetting = "iMessageDelay:General";
+    constexpr std::string_view kMessageTextSetting = "sMessageText:General";
     constexpr std::string_view kSettingsChangedEvent = "HelloWorld_SettingsChanged";
 
-    bool ApplyMessageDelaySetting()
+    bool ApplyNotificationSettings()
     {
-        if (!mcmSettings.Reload()) {
-            SKSE::log::error("Failed to load HelloWorld MCM settings; using the default delay");
+        if (!notificationService.ReloadSettings(mcmSettings)) {
+            SKSE::log::error("Failed to load HelloWorld MCM settings; retaining current notification settings");
             return false;
         }
 
-        const auto configuredDelay = mcmSettings.GetModSettingInt(kMessageDelaySetting, 180);
-        const auto delay = std::clamp(configuredDelay, 10, 600);
-        notificationService.SetMessageDelay(std::chrono::seconds{delay});
-        SKSE::log::info("HelloWorld notification delay set to {} seconds", delay);
+        SKSE::log::info("HelloWorld notification settings updated");
         return true;
     }
 
@@ -42,19 +38,19 @@ namespace
     {
     public:
         RE::BSEventNotifyControl ProcessEvent(
-            const SKSE::ModCallbackEvent* event,
-            RE::BSTEventSource<SKSE::ModCallbackEvent>*) override
+            const SKSE::ModCallbackEvent* event, RE::BSTEventSource<SKSE::ModCallbackEvent>*) override
         {
-            if (event && event->eventName == kSettingsChangedEvent && event->strArg == kMessageDelaySetting) {
-                ApplyMessageDelaySetting();
-            }
+            const bool settingsChanged = event && event->eventName == kSettingsChangedEvent &&
+                        (event->strArg == kMessageDelaySetting || event->strArg == kMessageTextSetting);
+
+            if (settingsChanged) { ApplyNotificationSettings(); }
             return RE::BSEventNotifyControl::kContinue;
         }
     } settingsChangedEventSink;
 
     void InitializeLogging()
     {
-        auto logDirectory = SKSE::log::log_directory();
+        const auto logDirectory = SKSE::log::log_directory();
         if (!logDirectory) {
             throw std::runtime_error("SKSE log directory is unavailable");
         }
@@ -105,7 +101,7 @@ namespace
             if (message->type == SKSE::MessagingInterface::kDataLoaded) {
                 LogMCMHelperStatus();
             } else if (message->type == SKSE::MessagingInterface::kPostLoadGame && message->data != nullptr) {
-                ApplyMessageDelaySetting();
+                ApplyNotificationSettings();
                 notificationService.Start();
             } else if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
                 notificationService.Stop();

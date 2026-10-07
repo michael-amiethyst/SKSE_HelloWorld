@@ -10,6 +10,8 @@
 
 #include "HeadMountedDisplay.h"
 
+class MCMHelperAPI;
+
 class NotificationService
 {
 public:
@@ -26,6 +28,10 @@ public:
     void Stop();
     // Restart an active countdown with the new interval.
     void SetMessageDelay(std::chrono::steady_clock::duration delay);
+    // Blank text restores transport messages; preserve nonblank text verbatim.
+    void SetMessageText(std::string text);
+    // Reload MCM defaults/overrides, retaining active settings if loading fails.
+    bool ReloadSettings(MCMHelperAPI& settings);
 
     // VisibleForTesting
     static const char* GetMessage_(HeadMountedDisplay::Transport transport) noexcept;
@@ -33,6 +39,7 @@ public:
 private:
     std::chrono::steady_clock::duration message_delay_{std::chrono::minutes{3}};
     std::uint64_t delay_generation_{0};
+    std::string message_text_;
 
     TransportProvider transport_provider_;
     NotificationSender notification_sender_;

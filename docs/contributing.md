@@ -79,8 +79,10 @@ Collect coverage with the installed Visual Studio coverage tool:
 The script finds `Microsoft.CodeCoverage.Console.exe` through the developer
 environment or `vswhere`. Supply `-CollectorPath` if it is installed elsewhere;
 use `-BuildDirectory` when collecting from another coverage-enabled build.
-The collector runs the NotificationService cases and includes only
-`src/NotificationService.cpp` and `src/NotificationService.h` in its report.
+The collector runs the NotificationService and MCMHelperAPI cases, including
+integration tests that reload INI settings while notifications are running. Its
+report includes both classes' `.cpp` and `.h` files. MCMHelperAPI's runtime version
+query needs Skyrim's Papyrus VM and is not exercised by the standalone suite.
 Results are written under the build directory:
 
 - `NotificationService.tests.xml`: Catch2 JUnit results.
@@ -99,7 +101,7 @@ The `HelloWorldAssets` CMake target owns the non-C++ parts of the package:
 - `../mod/HelloWorld.esp` contains the MCM registration quest.
 - `../mod/Scripts/HelloWorldMCM.pex` is the compiled Papyrus script.
 - `../mod/MCM/Config/HelloWorld/config.json` describes the menu.
-- `../mod/MCM/Config/HelloWorld/settings.ini` supplies the default delay.
+- `../mod/MCM/Config/HelloWorld/settings.ini` supplies the default delay and empty message text.
 - `../scripts/Source/HelloWorldMCM.psc` is the editable Papyrus source.
 
 The ESP contains a start-game-enabled quest with `HelloWorldMCM`
