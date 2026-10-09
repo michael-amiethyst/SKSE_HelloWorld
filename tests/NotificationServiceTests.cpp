@@ -249,6 +249,46 @@ TEST_CASE("NotificationService overrides every transport and restores defaults f
     }
 }
 
+TEST_CASE("NotificationService keeps one active timer after message text updates",
+          "[NotificationService][single-timer]")
+{
+    NotificationProbe probe;
+    auto service = MakeService(probe);
+    constexpr auto interval = 200ms;
+    service.SetMessageDelay(interval);
+    service.Start();
+    REQUIRE(probe.WaitForCount(1, 2s));
+
+    SECTION("one text update")
+    {
+        // Stagger the update from the original timer so an additional timer would
+        // produce notifications less than one full interval apart.
+        REQUIRE_FALSE(probe.WaitForCount(2, 60ms));
+        service.SetMessageText("Updated message");
+    }
+    SECTION("successive text updates including restoring defaults")
+    {
+        REQUIRE_FALSE(probe.WaitForCount(2, 30ms));
+        service.SetMessageText("First update");
+        REQUIRE_FALSE(probe.WaitForCount(2, 30ms));
+        service.SetMessageText("Second update");
+        service.SetMessageText("");
+        service.SetMessageText("Updated message");
+    }
+
+    // Observe several cycles: checking just the first updated notification would
+    // miss a second timer that starts emitting slightly later.
+    for (std::size_t index = 1; index <= 4; ++index) {
+        REQUIRE(probe.WaitForCount(index + 1, 2s));
+        CHECK(probe.At(index).message == "Updated message");
+        CHECK(probe.At(index).time - probe.At(index - 1).time >= interval);
+        REQUIRE_FALSE(probe.WaitForCount(index + 2, 60ms));
+    }
+    service.Stop();
+    CHECK(probe.Count() == 5);
+    CHECK_FALSE(probe.WaitForCount(6, interval * 2));
+}
+
 TEST_CASE("MCM Helper reloads notification text while NotificationService is running",
           "[NotificationService][MCMHelperAPI][integration]")
 {
