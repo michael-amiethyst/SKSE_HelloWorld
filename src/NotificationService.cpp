@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <utility>
 
@@ -15,6 +17,7 @@ NotificationService::~NotificationService() { Stop(); }
 
 void NotificationService::Start() {
     Stop();
+    spdlog::debug("NotificationService starting one worker");
     thread_ = std::jthread([this](const std::stop_token& stopToken) {
         std::unique_lock lock(mutex_);
 
@@ -28,6 +31,7 @@ void NotificationService::Start() {
                 break;
             }
             if (delayChanged) {
+                spdlog::debug("NotificationService countdown replaced (generation {})", delay_generation_);
                 continue;
             }
 
@@ -43,6 +47,21 @@ void NotificationService::SetMessageText(std::string text) {
     }
     std::scoped_lock lock(mutex_);
     message_text_ = std::move(text);
+    spdlog::info("NotificationService message text: {} ({} bytes)",
+                 message_text_.empty() ? "transport default" : "custom", message_text_.size());
+}
+
+bool NotificationService::HandleSettingChange(const std::string_view eventName,
+                                             std::string text, const float delaySeconds) {
+    if (eventName == TextChangedEvent) {
+        SetMessageText(std::move(text));
+        return true;
+    }
+    if (eventName == DelayChangedEvent && std::isfinite(delaySeconds)) {
+        SetMessageDelay(std::chrono::seconds{static_cast<int>(std::clamp(delaySeconds, 10.0f, 600.0f))});
+        return true;
+    }
+    return false;
 }
 
 bool NotificationService::ReloadSettings(MCMHelperAPI& settings) {
@@ -60,6 +79,8 @@ void NotificationService::SetMessageDelay(const std::chrono::steady_clock::durat
         std::scoped_lock lock(mutex_);
         message_delay_ = delay;
         ++delay_generation_;
+        spdlog::info("NotificationService delay={} seconds; countdown generation={}",
+                     std::chrono::duration<double>(delay).count(), delay_generation_);
     }
     timer_.notify_all();
 }

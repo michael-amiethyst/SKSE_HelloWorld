@@ -14,7 +14,7 @@ if(NOT EXISTS "${REQUIRED_SEQ_FILE}")
 endif()
 
 # Set your project name. This will be the name of your SKSE .dll file.
-project(HelloWorld VERSION 0.3.0 LANGUAGES CXX)
+project(HelloWorld VERSION 0.3.1 LANGUAGES CXX)
 
 set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
 

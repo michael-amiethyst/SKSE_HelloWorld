@@ -4,12 +4,23 @@ HelloWorld is an SKSE VR plugin that reports whether the active OpenVR headset
 connection is wired or wireless. It includes its own menu configuration for
 exposing the notification delay and Message Text through SkyUI's Mod Configuration Menu (MCM).
 
-The MCM's Papyrus script emits `HelloWorld_SettingsChanged` when the player
-changes `iMessageDelay:General` or `sMessageText:General`. The native plugin reloads the saved settings
-and restarts its notification timer when that event arrives, and also loads the
-saved settings whenever a game is loaded. Message Text defaults to an empty string.
+The MCM's Papyrus script sends the selected delay and message text directly to
+the native plugin with `HelloWorld_MessageDelayChanged` and
+`HelloWorld_MessageTextChanged`. Delay changes replace the active countdown.
+Saved settings also load when a game loads or the mod's menu opens.
+Message Text defaults to an empty string.
 Nonblank text replaces the headset connection messages; clearing it (or entering
 only whitespace) restores the default messages.
+
+SkyUI VR builds without MCM input-row support hide the editable text field. The
+visible **Message Text (VR fallback)** row shows the current value and offers
+instructions: edit `sMessageText` under `[General]` in
+`Data/MCM/Settings/HelloWorld.ini`, then reopen the mod's menu to apply it.
+
+Version 0.3.1 logs its DLL version, MCM asset paths and checks, menu script
+version, received callback values, and applied countdown generations in
+`SKSE/HelloWorld.log` under Skyrim VR's documents folder. Missing menu callbacks
+or asset mismatch errors help identify script/deployment conflicts on another PC.
 
 ## Installation and mod requirements
 

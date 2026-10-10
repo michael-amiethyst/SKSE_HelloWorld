@@ -6,6 +6,7 @@
 #include <functional>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include "HeadMountedDisplay.h"
@@ -32,6 +33,10 @@ public:
     void SetMessageText(std::string text);
     // Reload MCM defaults/overrides, retaining active settings if loading fails.
     bool ReloadSettings(MCMHelperAPI& settings);
+    // Apply live MCM values without relying on a settings file being visible yet.
+    bool HandleSettingChange(std::string_view eventName, std::string text, float delaySeconds);
+    static constexpr std::string_view DelayChangedEvent = "HelloWorld_MessageDelayChanged";
+    static constexpr std::string_view TextChangedEvent = "HelloWorld_MessageTextChanged";
 
     // VisibleForTesting
     static const char* GetMessage_(HeadMountedDisplay::Transport transport) noexcept;

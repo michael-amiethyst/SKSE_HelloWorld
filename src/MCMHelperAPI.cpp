@@ -6,6 +6,7 @@
 #include <memory>
 #include <stdexcept>
 #include <utility>
+#include <spdlog/spdlog.h>
 
 namespace
 {
@@ -129,8 +130,16 @@ bool MCMHelperAPI::LoadIfPresent_(CSimpleIniA& ini, const std::filesystem::path&
 {
     std::ifstream stream(path, std::ios::binary);
     if (!stream) {
-        return !std::filesystem::exists(path);
+        const bool missing = !std::filesystem::exists(path);
+        if (missing) {
+            spdlog::debug("MCM settings file absent: {}", path.string());
+        } else {
+            spdlog::error("MCM settings file cannot be opened: {}", path.string());
+        }
+        return missing;
     }
     const std::string contents(std::istreambuf_iterator<char>(stream), {});
-    return ini.LoadData(contents) >= SI_OK;
+    const auto result = ini.LoadData(contents);
+    spdlog::debug("MCM settings read: {} ({} bytes, parse result={})", path.string(), contents.size(), result);
+    return result >= SI_OK;
 }

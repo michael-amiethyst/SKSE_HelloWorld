@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/spdlog.h>
 
 #include "NotificationService.h"
 #include "MCMHelperAPI.h"
@@ -6,8 +8,10 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <condition_variable>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -18,6 +22,29 @@ using namespace std::chrono_literals;
 namespace
 {
     using Clock = std::chrono::steady_clock;
+
+    class ScopedLogCapture
+    {
+    public:
+        ScopedLogCapture() : previous_(spdlog::default_logger())
+        {
+            auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(output_);
+            auto logger = std::make_shared<spdlog::logger>("expected-test-error", sink);
+            logger->set_pattern("%l: %v");
+            spdlog::set_default_logger(std::move(logger));
+        }
+
+        ~ScopedLogCapture() { spdlog::set_default_logger(previous_); }
+
+        ScopedLogCapture(const ScopedLogCapture&) = delete;
+        ScopedLogCapture& operator=(const ScopedLogCapture&) = delete;
+
+        std::string Text() const { return output_.str(); }
+
+    private:
+        std::ostringstream output_;
+        std::shared_ptr<spdlog::logger> previous_;
+    };
 
     class NotificationProbe
     {
@@ -289,6 +316,43 @@ TEST_CASE("NotificationService keeps one active timer after message text updates
     CHECK_FALSE(probe.WaitForCount(6, interval * 2));
 }
 
+TEST_CASE("Live MCM delay callback replaces the current countdown",
+          "[NotificationService][MCMHelperAPI][integration]")
+{
+    NotificationProbe probe;
+    auto service = MakeService(probe);
+    service.SetMessageDelay(30ms);
+    service.Start();
+    REQUIRE(probe.WaitForCount(1, 1s));
+    REQUIRE(service.HandleSettingChange(NotificationService::DelayChangedEvent, "iMessageDelay:General", 600));
+    const auto count = probe.Count();
+    CHECK_FALSE(probe.WaitForCount(count + 1, 200ms));
+    CHECK_FALSE(service.HandleSettingChange(NotificationService::DelayChangedEvent, "",
+                                           std::numeric_limits<float>::quiet_NaN()));
+    CHECK_FALSE(service.HandleSettingChange("UnrelatedEvent", "", 10));
+    CHECK_FALSE(probe.WaitForCount(count + 1, 100ms));
+    service.Stop();
+}
+
+TEST_CASE("Live MCM text callback updates a single running timer without an INI reload",
+          "[NotificationService][MCMHelperAPI][integration]")
+{
+    NotificationProbe probe;
+    auto service = MakeService(probe);
+    service.SetMessageDelay(50ms);
+    service.Start();
+    REQUIRE(probe.WaitForCount(1, 1s));
+    for (const std::string text : {"Live text", "", "   ", "Replacement"}) {
+        REQUIRE(service.HandleSettingChange(NotificationService::TextChangedEvent, text, 0));
+        const auto count = probe.Count();
+        REQUIRE(probe.WaitForCount(count + 1, 1s));
+        CHECK(probe.At(count).message == (text.find_first_not_of(' ') == std::string::npos
+            ? NotificationService::GetMessage_(HeadMountedDisplay::Transport::kWireless) : text));
+        CHECK(probe.At(count).time - probe.At(count - 1).time >= 50ms);
+    }
+    service.Stop();
+}
+
 TEST_CASE("MCM Helper reloads notification text while NotificationService is running",
           "[NotificationService][MCMHelperAPI][integration]")
 {
@@ -329,5 +393,13 @@ TEST_CASE("MCM Helper reloads notification text while NotificationService is run
     // An unreadable INI must report failure rather than applying partial defaults.
     std::filesystem::remove(defaults);
     std::filesystem::create_directory(defaults);
-    CHECK_FALSE(service.ReloadSettings(settings));
+    {
+        // Capture only the deliberately induced failure, restoring normal logging
+        // on scope exit even when an assertion throws.
+        ScopedLogCapture logs;
+        CHECK_FALSE(service.ReloadSettings(settings));
+        INFO(logs.Text());
+        CHECK(logs.Text().find("error: MCM settings file cannot be opened: ") != std::string::npos);
+        CHECK(logs.Text().find(defaults.filename().string()) != std::string::npos);
+    }
 }

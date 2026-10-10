@@ -1,6 +1,9 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include <string_view>
+#include <filesystem>
+#include <fstream>
+#include <iterator>
 
 #include "HeadMountedDisplay.h"
 #include "MCMHelperAPI.h"
@@ -23,6 +26,33 @@ namespace
     constexpr std::string_view kMessageTextSetting = "sMessageText:General";
     constexpr std::string_view kSettingsChangedEvent = "HelloWorld_SettingsChanged";
 
+    void LogMenuAssets()
+    {
+        const auto root = std::filesystem::absolute("Data");
+        SKSE::log::info("HelloWorld 0.3.1 assets: Data directory={}", root.string());
+        for (const auto relative : {"MCM/Config/HelloWorld/config.json",
+                                    "MCM/Config/HelloWorld/settings.ini",
+                                    "Scripts/HelloWorldMCM.pex"}) {
+            const auto path = root / relative;
+            std::ifstream stream(path, std::ios::binary);
+            if (!stream) {
+                SKSE::log::error("Required MCM asset missing or unreadable: {}", path.string());
+                continue;
+            }
+            const std::string bytes(std::istreambuf_iterator<char>(stream), {});
+            SKSE::log::info("MCM asset {}: {} bytes", relative, bytes.size());
+            if (bytes.find("sMessageText") == std::string::npos) {
+                SKSE::log::error("MCM asset {} lacks sMessageText; check mod deployment/conflicts", relative);
+            }
+            if (std::string_view(relative).ends_with(".pex") &&
+                bytes.find("HelloWorld_MessageDelayChanged") == std::string::npos) {
+                SKSE::log::error("MCM script is outdated; live value callback not found");
+            }
+        }
+        SKSE::log::info("MCM player overrides: {}",
+                        (root / "MCM/Settings/HelloWorld.ini").string());
+    }
+
     bool ApplyNotificationSettings()
     {
         if (!notificationService.ReloadSettings(mcmSettings)) {
@@ -30,7 +60,9 @@ namespace
             return false;
         }
 
-        SKSE::log::info("HelloWorld notification settings updated");
+        SKSE::log::info("HelloWorld notification settings loaded: raw delay={} seconds, text={} bytes",
+                       mcmSettings.GetModSettingInt(kMessageDelaySetting, 180),
+                       mcmSettings.GetModSettingString(kMessageTextSetting, "").size());
         return true;
     }
 
@@ -40,10 +72,31 @@ namespace
         RE::BSEventNotifyControl ProcessEvent(
             const SKSE::ModCallbackEvent* event, RE::BSTEventSource<SKSE::ModCallbackEvent>*) override
         {
+            if (!event) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            if (event->eventName == "HelloWorld_MenuOpened") {
+                SKSE::log::info("MCM menu opened; script version={}", event->strArg.c_str());
+                LogMenuAssets();
+                ApplyNotificationSettings();
+            } else if (event->eventName == NotificationService::DelayChangedEvent ||
+                       event->eventName == NotificationService::TextChangedEvent) {
+                SKSE::log::info("MCM live callback: event={}, number={}, text bytes={}",
+                               event->eventName.c_str(), event->numArg, event->strArg.length());
+                if (!notificationService.HandleSettingChange(event->eventName.c_str(),
+                                                             event->strArg.c_str(), event->numArg)) {
+                    SKSE::log::error("Rejected invalid MCM callback value");
+                }
+                return RE::BSEventNotifyControl::kContinue;
+            }
             const bool settingsChanged = event && event->eventName == kSettingsChangedEvent &&
                         (event->strArg == kMessageDelaySetting || event->strArg == kMessageTextSetting);
 
-            if (settingsChanged) { ApplyNotificationSettings(); }
+            if (settingsChanged) {
+                SKSE::log::warn("Legacy MCM callback for {}; reload INI (check installed script version)",
+                               event->strArg.c_str());
+                ApplyNotificationSettings();
+            }
             return RE::BSEventNotifyControl::kContinue;
         }
     } settingsChangedEventSink;
@@ -63,7 +116,7 @@ namespace
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
         spdlog::set_level(spdlog::level::debug);
         spdlog::flush_on(spdlog::level::debug);
-        SKSE::log::info("SKSE HelloWorld Initialized");
+        SKSE::log::info("SKSE HelloWorld 0.3.1 Initialized (live MCM callbacks)");
     }
 
     void LogMCMHelperStatus()
@@ -93,12 +146,14 @@ namespace
 
         if (auto* eventSource = SKSE::GetModCallbackEventSource()) {
             eventSource->AddEventSink(&settingsChangedEventSink);
+            SKSE::log::info("MCM callback event sink registered");
         } else {
             SKSE::log::error("SKSE mod callback event source is unavailable; MCM changes will not apply");
         }
 
         SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message* message) {
             if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+                LogMenuAssets();
                 LogMCMHelperStatus();
             } else if (message->type == SKSE::MessagingInterface::kPostLoadGame && message->data != nullptr) {
                 ApplyNotificationSettings();

@@ -23,6 +23,19 @@
     },
     {
       "id": "sMessageText:General",
+      "text": "Message Text (VR fallback)",
+      "help": "Current custom message. If the editable Message Text row is missing, select this row for INI editing instructions.",
+      "type": "text",
+      "valueOptions": {
+        "sourceType": "ModSettingString"
+      },
+      "action": {
+        "type": "CallFunction",
+        "function": "ShowMessageTextHelp"
+      }
+    },
+    {
+      "id": "sMessageText:General",
       "text": "Message Text",
       "help": "Custom notification text for headcanon, notes or reminders. When blank the default headset connection messages display.",
       "type": "input",
