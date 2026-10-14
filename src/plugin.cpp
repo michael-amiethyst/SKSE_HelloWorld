@@ -8,6 +8,7 @@
 #include "HeadMountedDisplay.h"
 #include "MCMHelperAPI.h"
 #include "NotificationService.h"
+#include "Version.h"
 
 namespace
 {
@@ -29,7 +30,7 @@ namespace
     void LogMenuAssets()
     {
         const auto root = std::filesystem::absolute("Data");
-        SKSE::log::info("HelloWorld 0.3.1 assets: Data directory={}", root.string());
+        SKSE::log::info("HelloWorld {} assets: Data directory={}", HelloWorld::Version, root.string());
         for (const auto relative : {"MCM/Config/HelloWorld/config.json",
                                     "MCM/Config/HelloWorld/settings.ini",
                                     "Scripts/HelloWorldMCM.pex"}) {
@@ -77,6 +78,10 @@ namespace
             }
             if (event->eventName == "HelloWorld_MenuOpened") {
                 SKSE::log::info("MCM menu opened; script version={}", event->strArg.c_str());
+                if (std::string_view(event->strArg.c_str()) != HelloWorld::Version) {
+                    SKSE::log::error("MCM script/DLL version mismatch: script={}, DLL={}",
+                                     event->strArg.c_str(), HelloWorld::Version);
+                }
                 LogMenuAssets();
                 ApplyNotificationSettings();
             } else if (event->eventName == NotificationService::DelayChangedEvent ||
@@ -116,7 +121,7 @@ namespace
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
         spdlog::set_level(spdlog::level::debug);
         spdlog::flush_on(spdlog::level::debug);
-        SKSE::log::info("SKSE HelloWorld 0.3.1 Initialized (live MCM callbacks)");
+        SKSE::log::info("SKSE HelloWorld {} Initialized (live MCM callbacks)", HelloWorld::Version);
     }
 
     void LogMCMHelperStatus()

@@ -14,7 +14,8 @@ if(NOT EXISTS "${REQUIRED_SEQ_FILE}")
 endif()
 
 # Set your project name. This will be the name of your SKSE .dll file.
-project(HelloWorld VERSION 0.3.1 LANGUAGES CXX)
+project(HelloWorld VERSION 0.3.2 LANGUAGES CXX)
+include(build-tools/VersionAssets.cmake)
 
 set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
 
@@ -25,6 +26,9 @@ add_custom_target(
         COMMAND "${CMAKE_COMMAND}" -E remove_directory "${MOD_CONTENTS}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${MOD_CONTENTS}"
         COMMAND "${CMAKE_COMMAND}" -E copy_directory "${MOD_SOURCE}" "${MOD_CONTENTS}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${HELLOWORLD_MCM_PEX}" "${MOD_CONTENTS}/Scripts/HelloWorldMCM.pex"
+        COMMAND "${CMAKE_COMMAND}" -E rm -f "${MOD_CONTENTS}/Scripts/HelloWorldMCM.version.json"
+        DEPENDS HelloWorldPapyrus
         COMMENT "Staging checked-in mod assets"
         VERBATIM
 )
@@ -45,12 +49,15 @@ add_commonlibsse_plugin(
 )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 standard
 target_precompile_headers(${PROJECT_NAME} PRIVATE lib/PCH.h) # <--- PCH.h is required!
-target_include_directories(${PROJECT_NAME} PRIVATE lib)
+target_include_directories(${PROJECT_NAME} PRIVATE lib "${HELLOWORLD_GENERATED}")
 target_link_libraries(${PROJECT_NAME} PRIVATE SimpleIni::SimpleIni)
 add_dependencies(${PROJECT_NAME} HelloWorldAssets)
 
 include(CTest)
 if(BUILD_TESTING)
+    add_test(NAME VersionArtifacts COMMAND "${CMAKE_COMMAND}"
+        "-DSOURCE_ROOT=${PROJECT_SOURCE_DIR}" "-DTEST_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}/version-tests"
+        -P "${PROJECT_SOURCE_DIR}/tests/VersionArtifactsTests.cmake")
     find_package(Catch2 3 CONFIG REQUIRED)
 
     add_executable(

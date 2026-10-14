@@ -5,7 +5,7 @@ String Property MessageTextSetting = "sMessageText:General" AutoReadOnly
 String Property SettingsChangedEvent = "HelloWorld_SettingsChanged" AutoReadOnly
 
 Event OnSettingChange(String a_ID)
-    Debug.Trace("[HelloWorld MCM 0.3.1] OnSettingChange: " + a_ID)
+    Debug.Trace("[HelloWorld MCM @PROJECT_VERSION@] OnSettingChange: " + a_ID)
     If a_ID == MessageDelaySetting
         SendModEvent("HelloWorld_MessageDelayChanged", a_ID, GetModSettingInt(a_ID))
     ElseIf a_ID == MessageTextSetting
@@ -15,8 +15,8 @@ EndEvent
 
 Event OnConfigOpen()
     Parent.OnConfigOpen()
-    Debug.Trace("[HelloWorld MCM 0.3.1] Menu opened")
-    SendModEvent("HelloWorld_MenuOpened", "0.3.1")
+    Debug.Trace("[HelloWorld MCM @PROJECT_VERSION@] Menu opened")
+    SendModEvent("HelloWorld_MenuOpened", "@PROJECT_VERSION@")
 EndEvent
 
 Function ShowMessageTextHelp()

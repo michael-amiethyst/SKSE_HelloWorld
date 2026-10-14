@@ -8,7 +8,7 @@ Install the build tools listed in the [README](../README.md#build-requirements).
 
 Install the Creation Kit and its Papyrus compiler
 before editing the ESP files (like [mod/HelloWorld.esp](../mod/HelloWorld.esp)) or recompiling the Papyrus source.
-Example Papyrus source at [HelloWorldMCM.psc](../scripts/Source/HelloWorldMCM.psc).
+Editable Papyrus template at [HelloWorldMCM.psc.in](../scripts/Source/HelloWorldMCM.psc.in).
 
 ## Configuring a local release build
 
@@ -102,7 +102,7 @@ The `HelloWorldAssets` CMake target owns the non-C++ parts of the package:
 - `../mod/Scripts/HelloWorldMCM.pex` is the compiled Papyrus script.
 - `../mod/MCM/Config/HelloWorld/config.json` describes the menu.
 - `../mod/MCM/Config/HelloWorld/settings.ini` supplies the default delay and empty message text.
-- `../scripts/Source/HelloWorldMCM.psc` is the editable Papyrus source.
+- `../scripts/Source/HelloWorldMCM.psc.in` is the editable Papyrus template.
 
 The ESP contains a start-game-enabled quest with `HelloWorldMCM`
 attached. Its forced player alias has `SKI_PlayerLoadGameAlias` attached, which
@@ -144,9 +144,9 @@ See xEdit's
 for its description of the same operation.
 
 When the quest changes, save the updated plugin as `../mod/HelloWorld.esp`.
-When the Papyrus source changes, compile it with the Creation Kit's Papyrus
-compiler and replace `../mod/Scripts/HelloWorldMCM.pex`. Commit those compiled
-outputs so contributors and CI can build the package without the Creation Kit.
+When the Papyrus template or project version changes, use `RefreshMCMArtifact`
+as described below. Commit the compiled script and generated stamp so
+contributors and CI can build the package without a Papyrus compiler.
 
 Build only these assets with:
 
@@ -165,7 +165,54 @@ cmake --build build/local-release --target HelloWorldPackage
 
 ## Versioning
 
-The `project(... VERSION ...)` value in `CMakeLists.txt` names release archives.
-The manifest version in `vcpkg.json` describes this project's vcpkg manifest.
-They are technically independent, but keep them equal for project releases so
-build metadata does not report conflicting versions.
+The `project(HelloWorld VERSION ...)` value in `CMakeLists.txt` is the only
+hand-maintained release version. Change it there when making a release.
+CMake generates `generated/Version.h` and `generated/Source/HelloWorldMCM.psc`
+inside each build directory. The DLL's logs, Papyrus logs and menu event,
+CommonLibSSE plugin metadata, and archive name all use that version.
+`vcpkg.json` is an application dependency manifest and omits the optional
+application version; dependency versions are independent of the release version.
+
+Build helpers and vcpkg overlay triplets live in `build-tools/`. Local compiler
+files and imports live in the ignored `build-tools/papyrus/` directory. When that
+bundle is present, new CMake configurations enable automatic compilation using
+`PapyrusCompiler.exe`, `MCMHelper/`, `SRC_SKYUI/`, `SRC/`, and
+`SkyrimPapyrusFlags.flg` in that directory. The compiler's DLLs and assembler
+must stay alongside its executable.
+
+To enable bundle auto-detection in an existing build whose cache has older or
+empty paths, configure it again with `-U 'HELLOWORLD_PAPYRUS_*'`. To deliberately
+use checked-in artifacts instead, configure `-DHELLOWORLD_PAPYRUS_COMPILER=`.
+
+For a different compiler installation, configure these cache variables in your
+ignored `CMakeUserPresets.json` or pass them with `-D`:
+
+- `HELLOWORLD_PAPYRUS_COMPILER`: full path to Bethesda `PapyrusCompiler.exe`.
+- `HELLOWORLD_PAPYRUS_IMPORTS`: semicolon-separated directories containing
+  MCM Helper's public scripts, SkyUI scripts, and Skyrim/SKSE scripts.
+- `HELLOWORLD_PAPYRUS_FLAGS`: full path to `SkyrimPapyrusFlags.flg`.
+
+CMake adds the generated source directory to the imports automatically. Normal
+asset/package builds compile and stage the generated script. Compilation failure
+stops the build; an old compiler output cannot be reused as a successful result.
+
+After editing the template or changing the version, refresh the checked-in
+artifact using a build configured with those variables:
+
+```powershell
+cmake --build build/local-release --target RefreshMCMArtifact
+```
+
+Commit `mod/Scripts/HelloWorldMCM.pex` and
+`mod/Scripts/HelloWorldMCM.version.json` with the source/version change. The stamp
+records the generated version and SHA-256 hashes of the generated source and
+compiled script. It is generated metadata: do not edit it by hand.
+
+Without a configured compiler, asset/package builds validate the checked-in
+artifact against that stamp. A version, source, or binary mismatch stops packaging
+with instructions to refresh it. C++ unit tests can still build independently.
+The stamp is excluded from the installable archive.
+
+CTest's `VersionArtifacts` test verifies propagation of an arbitrary future
+version and rejection of stale version, source, and PEX data. At runtime, opening
+the mod's MCM also logs an error if its script version differs from the DLL.

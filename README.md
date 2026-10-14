@@ -17,7 +17,7 @@ visible **Message Text (VR fallback)** row shows the current value and offers
 instructions: edit `sMessageText` under `[General]` in
 `Data/MCM/Settings/HelloWorld.ini`, then reopen the mod's menu to apply it.
 
-Version 0.3.1 logs its DLL version, MCM asset paths and checks, menu script
+HelloWorld logs its DLL version, MCM asset paths and checks, menu script
 version, received callback values, and applied countdown generations in
 `SKSE/HelloWorld.log` under Skyrim VR's documents folder. Missing menu callbacks
 or asset mismatch errors help identify script/deployment conflicts on another PC.
@@ -55,12 +55,13 @@ its own `MCMHelper.log` in the same directory when it is installed and loaded.
   installation directory
 
 The normal C++ build does not require the Creation Kit. The compiled ESP and
-PEX are checked in under `mod/`, and CMake only stages them for packaging.
+PEX are checked in under `mod/`; CMake validates the PEX's version and source
+hashes before packaging when no Papyrus compiler is configured.
 
-The Creation Kit and its Papyrus compiler are authoring requirements when you
-change the quest in `HelloWorld.esp` or `HelloWorldMCM.psc`. After making those
-changes, replace `mod/HelloWorld.esp` and/or
-`mod/Scripts/HelloWorldMCM.pex` with the new outputs before building a release.
+The Creation Kit is needed to change the quest in `HelloWorld.esp`. For Papyrus
+template edits or release version changes, configure the Papyrus compiler and
+run `RefreshMCMArtifact` to update the checked-in script and its stamp. See
+[Versioning](docs/contributing.md#versioning) for configuration and commands.
 
 ## Building
 
