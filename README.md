@@ -16,6 +16,9 @@ SkyUI VR builds without MCM input-row support hide the editable text field. The
 visible **Message Text (VR fallback)** row shows the current value and offers
 instructions: edit `sMessageText` under `[General]` in
 `Data/MCM/Settings/HelloWorld.ini`, then reopen the mod's menu to apply it.
+The fallback row reads the backing file on every menu open, so its displayed
+text updates too. If a file cannot be read, the row retains its previous value
+and the failure is logged. Opening the menu does not rewrite the INI.
 
 HelloWorld logs its DLL version, MCM asset paths and checks, menu script
 version, received callback values, and applied countdown generations in

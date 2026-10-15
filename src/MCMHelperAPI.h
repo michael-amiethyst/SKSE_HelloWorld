@@ -26,6 +26,9 @@ public:
 
     // Reloads defaults and user overrides from MCM Helper's INI files.
     bool Reload();
+    // Read the backing file for the menu, bypassing MCM Helper's runtime cache.
+    // Keep the currently displayed value if the file cannot be loaded.
+    [[nodiscard]] std::string ReloadMenuMessageText(std::string_view currentText);
 
     [[nodiscard]] std::int32_t GetModSettingInt(std::string_view settingId,
                                                 std::int32_t defaultValue) const;

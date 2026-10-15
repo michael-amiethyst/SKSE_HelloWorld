@@ -149,6 +149,15 @@ namespace
         SKSE::Init(skse);
         InitializeLogging();
 
+        SKSE::GetPapyrusInterface()->Register([](RE::BSScript::IVirtualMachine* vm) {
+            vm->RegisterFunction("ReadMenuMessageText", "HelloWorldMCM",
+                +[](RE::TESQuest*, std::string currentText) -> std::string {
+                    return mcmSettings.ReloadMenuMessageText(currentText);
+                });
+            SKSE::log::info("MCM backing-file text reader registered");
+            return true;
+        });
+
         if (auto* eventSource = SKSE::GetModCallbackEventSource()) {
             eventSource->AddEventSink(&settingsChangedEventSink);
             SKSE::log::info("MCM callback event sink registered");

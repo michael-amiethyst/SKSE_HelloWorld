@@ -377,6 +377,7 @@ TEST_CASE("MCM Helper reloads notification text while NotificationService is run
 
     for (const std::string text : {"Custom courier", "Replacement", "", "   "}) {
         std::ofstream(overrides) << "[General]\nsMessageText=" << text << '\n';
+        const auto displayedText = settings.ReloadMenuMessageText("stale menu value");
         REQUIRE(service.ReloadSettings(settings));
         // Production clamps delays to at least ten seconds; accelerate only the timer for this test.
         service.SetMessageDelay(20ms);
@@ -384,6 +385,7 @@ TEST_CASE("MCM Helper reloads notification text while NotificationService is run
         REQUIRE(probe.WaitForCount(count + 1, 1s));
         CHECK(probe.At(count).message == (text.find_first_not_of(' ') == std::string::npos
             ? NotificationService::GetMessage_(HeadMountedDisplay::Transport::kWireless) : text));
+        CHECK(displayedText == (text.find_first_not_of(' ') == std::string::npos ? "" : text));
     }
     service.Stop();
 
@@ -398,6 +400,7 @@ TEST_CASE("MCM Helper reloads notification text while NotificationService is run
         // on scope exit even when an assertion throws.
         ScopedLogCapture logs;
         CHECK_FALSE(service.ReloadSettings(settings));
+        CHECK(settings.ReloadMenuMessageText("last displayed text") == "last displayed text");
         INFO(logs.Text());
         CHECK(logs.Text().find("error: MCM settings file cannot be opened: ") != std::string::npos);
         CHECK(logs.Text().find(defaults.filename().string()) != std::string::npos);

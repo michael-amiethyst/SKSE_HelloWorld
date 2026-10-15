@@ -22,12 +22,14 @@
       }
     },
     {
-      "id": "sMessageText:General",
+      "id": "MessageTextDisplay",
       "text": "Message Text (VR fallback)",
       "help": "Current custom message. If the editable Message Text row is missing, select this row for INI editing instructions.",
       "type": "text",
       "valueOptions": {
-        "sourceType": "ModSettingString"
+        "sourceType": "PropertyValueString",
+        "scriptName": "HelloWorldMCM",
+        "propertyName": "MenuMessageText"
       },
       "action": {
         "type": "CallFunction",

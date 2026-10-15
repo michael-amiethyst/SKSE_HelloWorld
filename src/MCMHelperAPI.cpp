@@ -75,6 +75,17 @@ bool MCMHelperAPI::Reload()
     return LoadIfPresent_(ini_, defaultsPath_) && LoadIfPresent_(ini_, settingsPath_);
 }
 
+std::string MCMHelperAPI::ReloadMenuMessageText(const std::string_view currentText)
+{
+    if (!Reload()) {
+        spdlog::error("MCM menu text reload failed; retaining displayed text");
+        return std::string(currentText);
+    }
+    auto text = GetModSettingString("sMessageText:General", "");
+    spdlog::debug("MCM menu text reloaded from disk ({} bytes)", text.size());
+    return text;
+}
+
 std::int32_t MCMHelperAPI::GetModSettingInt(const std::string_view settingId,
                                             const std::int32_t defaultValue) const
 {
