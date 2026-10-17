@@ -9,6 +9,7 @@
 #include "MCMHelperAPI.h"
 #include "NotificationService.h"
 #include "Version.h"
+#include "MessageTextLayout.h"
 
 namespace
 {
@@ -162,7 +163,21 @@ namespace
                 +[](RE::TESQuest*, std::int32_t delay) -> bool {
                     return mcmSettings.SaveMenuMessageDelay(delay);
                 });
-            SKSE::log::info("MCM backing-file text and delay readers/writer registered");
+            vm->RegisterFunction("GetMessagePageCount", "HelloWorldMCM",
+                +[](RE::TESQuest*, std::string text) -> std::int32_t {
+                    return static_cast<std::int32_t>(MessageTextLayout::GetPage(text, 0).count);
+                });
+            vm->RegisterFunction("GetMessageLineCount", "HelloWorldMCM",
+                +[](RE::TESQuest*, std::string text, std::int32_t page) -> std::int32_t {
+                    return static_cast<std::int32_t>(MessageTextLayout::GetPage(text, page).lines.size());
+                });
+            vm->RegisterFunction("GetMessageLine", "HelloWorldMCM",
+                +[](RE::TESQuest*, std::string text, std::int32_t page, std::int32_t line) -> std::string {
+                    const auto layout = MessageTextLayout::GetPage(text, page);
+                    return line >= 0 && static_cast<std::size_t>(line) < layout.lines.size()
+                        ? layout.lines[line] : std::string{};
+                });
+            SKSE::log::info("MCM backing-file settings and message wrapping functions registered");
             return true;
         });
         if (!registerSuccess) {

@@ -26,24 +26,6 @@
       }
     },
     {
-      "type": "header",
-      "text": "Message Text"
-    },
-    {
-      "id": "MessageTextDisplay",
-      "help": "Current message: {value}. Select this row for INI editing instructions if the editable field is unavailable.",
-      "type": "text",
-      "valueOptions": {
-        "sourceType": "PropertyValueString",
-        "scriptName": "HelloWorldMCM",
-        "propertyName": "MenuMessageText"
-      },
-      "action": {
-        "type": "CallFunction",
-        "function": "ShowMessageTextHelp"
-      }
-    },
-    {
       "id": "sMessageText:General",
       "text": "Message Text",
       "help": "Custom notification text for headcanon, notes or reminders. When blank the default headset connection messages display.",
@@ -51,6 +33,10 @@
       "valueOptions": {
         "sourceType": "ModSettingString"
       }
+    },
+    {
+      "type": "header",
+      "text": "Message Text"
     }
   ]
 }

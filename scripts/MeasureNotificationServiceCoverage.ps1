@@ -39,7 +39,7 @@ foreach ($report in @($reportPath, $testsPath, $summaryPath)) {
 
 & $CollectorPath collect --settings $settingsPath --include-files $testExecutable `
     --output $reportPath --output-format cobertura -- `
-    $testExecutable '[NotificationService],[MCMHelperAPI]' --reporter junit --out $testsPath
+    $testExecutable '[NotificationService],[MCMHelperAPI],[MessageTextLayout]' --reporter junit --out $testsPath
 if ($LASTEXITCODE -ne 0) {
     throw "Coverage collection failed with exit code $LASTEXITCODE."
 }
@@ -60,13 +60,13 @@ foreach ($suite in $suites) {
 
 [xml]$coverage = Get-Content -LiteralPath $reportPath -Raw
 $classes = @($coverage.SelectNodes('//class') | Where-Object {
-    $_.filename -match '(^|[\\/])(NotificationService|MCMHelperAPI)\.(cpp|h)$'
+    $_.filename -match '(^|[\\/])(NotificationService|MCMHelperAPI|MessageTextLayout)\.(cpp|h)$'
 })
 if (!$classes.Count) {
     throw 'No NotificationService source was measured. Check debug symbols and coverage settings.'
 }
 
-$rows = @('# NotificationService and MCMHelperAPI coverage', '', '| Source | Covered lines | Total lines | Line coverage |',
+$rows = @('# NotificationService, MCMHelperAPI, and MessageTextLayout coverage', '', '| Source | Covered lines | Total lines | Line coverage |',
     '| --- | ---: | ---: | ---: |')
 foreach ($file in ($classes | Group-Object filename)) {
     $lines = @{}
@@ -88,7 +88,7 @@ $testCount = $testResults.SelectNodes('//testcase').Count
 if (!$testCount) {
     throw 'The test result file contains no test cases.'
 }
-$rows += '', "NotificationService and MCMHelperAPI test cases passed: $testCount.", '',
-    'Measured by Microsoft.CodeCoverage.Console with native instrumentation. Source filters include NotificationService and MCMHelperAPI (.cpp and .h).'
+$rows += '', "NotificationService, MCMHelperAPI, and MessageTextLayout test cases passed: $testCount.", '',
+    'Measured by Microsoft.CodeCoverage.Console with native instrumentation. Source filters include NotificationService, MCMHelperAPI, and MessageTextLayout (.cpp and .h).'
 $rows | Set-Content -LiteralPath $summaryPath -Encoding utf8
 $rows

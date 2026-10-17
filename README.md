@@ -13,10 +13,14 @@ Nonblank text replaces the headset connection messages; clearing it (or entering
 only whitespace) restores the default messages.
 
 SkyUI VR builds without MCM input-row support hide the editable text field. The
-visible **Message Text** heading has the current value on the following row.
-Select that value row for instructions: edit `sMessageText` under `[General]` in
+visible **Message Text** heading has the current value on the following rows.
+Messages wrap at word boundaries into rows of up to 32 characters; long words
+split across rows without breaking UTF-8 characters. Eight lines are displayed
+at a time, with Previous/Next controls for longer messages. Notification text
+and the saved INI are unaffected by display wrapping.
+Select a message line for instructions: edit `sMessageText` under `[General]` in
 `Data/MCM/Settings/HelloWorld.ini`, then reopen the mod's menu to apply it.
-The fallback row reads the backing file on every menu open, so its displayed
+The message display reads the backing file on every menu open, so its displayed
 text updates too. The delay slider also reloads from the backing file on menu
 open, clamps to 10–600 seconds, and persists subsequent slider edits while
 preserving other settings. If a file cannot be read, the row retains its previous value

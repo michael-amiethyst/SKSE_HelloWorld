@@ -81,7 +81,9 @@ environment or `vswhere`. Supply `-CollectorPath` if it is installed elsewhere;
 use `-BuildDirectory` when collecting from another coverage-enabled build.
 The collector runs the NotificationService and MCMHelperAPI cases, including
 integration tests that reload INI settings while notifications are running. Its
-report includes both classes' `.cpp` and `.h` files. MCMHelperAPI's runtime version
+report includes both classes and MessageTextLayout (`.cpp` and `.h` files).
+MessageTextLayout tests cover word wrapping, UTF-8 boundaries, explicit line
+breaks, page limits, and long messages without truncation. MCMHelperAPI's runtime version
 query needs Skyrim's Papyrus VM and is not exercised by the standalone suite.
 Results are written under the build directory:
 
@@ -189,12 +191,17 @@ ignored `CMakeUserPresets.json` or pass them with `-D`:
 
 - `HELLOWORLD_PAPYRUS_COMPILER`: full path to Bethesda `PapyrusCompiler.exe`.
 - `HELLOWORLD_PAPYRUS_IMPORTS`: semicolon-separated directories containing
-  MCM Helper's public scripts, SkyUI scripts, and Skyrim/SKSE scripts.
+  MCM Helper's private compile-time scripts, SkyUI scripts, and Skyrim/SKSE scripts.
 - `HELLOWORLD_PAPYRUS_FLAGS`: full path to `SkyrimPapyrusFlags.flg`.
 
 CMake adds the generated source directory to the imports automatically. Normal
 asset/package builds compile and stage the generated script. Compilation failure
 stops the build; an old compiler output cannot be reused as a successful result.
+The wrapped message renderer overrides `OnPageReset` and uses `AddTextOption`;
+MCM Helper's public stubs omit those methods. Use the matching private
+`MCM_ConfigBase.psc` and `SKI_ConfigBase.psc` headers for compilation (the local
+bundle's `MCMHelper/` directory contains them). These headers are dependencies
+only; do not compile or distribute replacement MCM Helper/SkyUI scripts.
 
 After editing the template or changing the version, refresh the checked-in
 artifact using a build configured with those variables:

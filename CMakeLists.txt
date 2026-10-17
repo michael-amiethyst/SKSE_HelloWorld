@@ -14,7 +14,7 @@ if(NOT EXISTS "${REQUIRED_SEQ_FILE}")
 endif()
 
 # Set your project name. This will be the name of your SKSE .dll file.
-project(HelloWorld VERSION 0.3.5 LANGUAGES CXX)
+project(HelloWorld VERSION 0.3.6 LANGUAGES CXX)
 include(build-tools/VersionAssets.cmake)
 
 set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
@@ -41,6 +41,8 @@ add_commonlibsse_plugin(
         SOURCES
         src/MCMHelperAPI.cpp
         src/MCMHelperAPI.h
+        src/MessageTextLayout.cpp
+        src/MessageTextLayout.h
         src/NotificationService.cpp
         src/NotificationService.h
         src/HeadMountedDisplay.cpp
@@ -63,9 +65,11 @@ if(BUILD_TESTING)
     add_executable(
             HelloWorldTests
             tests/MCMHelperAPITests.cpp
+            tests/MessageTextLayoutTests.cpp
             tests/NotificationServiceTests.cpp
             tests/OpenVRTransportDetectorTests.cpp
             src/MCMHelperAPI.cpp
+            src/MessageTextLayout.cpp
             src/NotificationService.cpp
             src/HeadMountedDisplay.cpp
     )

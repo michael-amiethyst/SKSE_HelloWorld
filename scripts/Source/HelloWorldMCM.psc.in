@@ -6,10 +6,18 @@ String Property SettingsChangedEvent = "HelloWorld_SettingsChanged" AutoReadOnly
 String Property MenuMessageText = "" Auto
 Int Property MenuMessageDelay = 180 Auto
 
+Int messagePage = 0
+Int previousLinesOption = -1
+Int nextLinesOption = -1
+Int[] messageLineOptions
+
 ; Registered by the HelloWorld DLL; reads the INI instead of MCM Helper's cache.
 String Function ReadMenuMessageText(String currentText) Native
 Int Function ReadMenuMessageDelay(Int currentDelay) Native
 Bool Function WriteMenuMessageDelay(Int delay) Native
+Int Function GetMessagePageCount(String text) Native
+Int Function GetMessageLineCount(String text, Int page) Native
+String Function GetMessageLine(String text, Int page, Int line) Native
 
 Event OnSettingChange(String a_ID)
     Debug.Trace("[HelloWorld MCM @PROJECT_VERSION@] OnSettingChange: " + a_ID)
@@ -23,7 +31,8 @@ Event OnSettingChange(String a_ID)
     ElseIf a_ID == MessageTextSetting
         MenuMessageText = GetModSettingString(a_ID)
         SendModEvent("HelloWorld_MessageTextChanged", GetModSettingString(a_ID))
-        RefreshMenu()
+        messagePage = 0
+        ForcePageReset()
     EndIf
 EndEvent
 
@@ -31,9 +40,83 @@ Event OnConfigOpen()
     Parent.OnConfigOpen()
     MenuMessageText = ReadMenuMessageText(MenuMessageText)
     MenuMessageDelay = ReadMenuMessageDelay(MenuMessageDelay)
-    RefreshMenu()
+    messagePage = 0
+    ForcePageReset()
     Debug.Trace("[HelloWorld MCM @PROJECT_VERSION@] Menu opened")
     SendModEvent("HelloWorld_MenuOpened", "@PROJECT_VERSION@")
+EndEvent
+
+Event OnPageReset(String a_page)
+    Parent.OnPageReset(a_page)
+    Int pageCount = GetMessagePageCount(MenuMessageText)
+    If messagePage >= pageCount
+        messagePage = pageCount - 1
+    EndIf
+    messageLineOptions = new Int[8]
+    Int lineCount = GetMessageLineCount(MenuMessageText, messagePage)
+    Int line = 0
+    While line < 8
+        messageLineOptions[line] = -1
+        If line < lineCount
+            ; Use only the label field so there is no competing value and no
+            ; automatic uppercasing of the player's message.
+            messageLineOptions[line] = AddTextOption(GetMessageLine(MenuMessageText, messagePage, line), "", 0)
+        EndIf
+        line += 1
+    EndWhile
+    previousLinesOption = -1
+    nextLinesOption = -1
+    If pageCount > 1
+        AddTextOption("Message page", (messagePage + 1) + " / " + pageCount, 1)
+        Int previousFlags = 0
+        Int nextFlags = 0
+        If messagePage == 0
+            previousFlags = 1
+        EndIf
+        If messagePage == pageCount - 1
+            nextFlags = 1
+        EndIf
+        previousLinesOption = AddTextOption("Previous lines", "", previousFlags)
+        nextLinesOption = AddTextOption("Next lines", "", nextFlags)
+    EndIf
+EndEvent
+
+Bool Function IsMessageLine(Int option)
+    If messageLineOptions == None
+        Return False
+    EndIf
+    Int line = 0
+    While line < messageLineOptions.Length
+        If messageLineOptions[line] == option
+            Return True
+        EndIf
+        line += 1
+    EndWhile
+    Return False
+EndFunction
+
+Event OnOptionSelect(Int a_option)
+    If a_option == previousLinesOption && messagePage > 0
+        messagePage -= 1
+        ForcePageReset()
+    ElseIf a_option == nextLinesOption && messagePage + 1 < GetMessagePageCount(MenuMessageText)
+        messagePage += 1
+        ForcePageReset()
+    ElseIf IsMessageLine(a_option)
+        ShowMessageTextHelp()
+    Else
+        Parent.OnOptionSelect(a_option)
+    EndIf
+EndEvent
+
+Event OnOptionHighlight(Int a_option)
+    If IsMessageLine(a_option)
+        SetInfoText("Custom notification message. Select a line for INI editing instructions.")
+    ElseIf a_option == previousLinesOption || a_option == nextLinesOption
+        SetInfoText("Read more lines of the message.")
+    Else
+        Parent.OnOptionHighlight(a_option)
+    EndIf
 EndEvent
 
 Function ShowMessageTextHelp()
