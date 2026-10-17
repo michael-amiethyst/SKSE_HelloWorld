@@ -3,6 +3,7 @@
   "modName": "HelloWorld",
   "displayName": "Hello World",
   "minMcmVersion": 13,
+  "cursorFillMode": "topToBottom",
   "content": [
     {
       "type": "header",
@@ -25,9 +26,12 @@
       }
     },
     {
+      "type": "header",
+      "text": "Message Text"
+    },
+    {
       "id": "MessageTextDisplay",
-      "text": "Message Text (VR fallback)",
-      "help": "Current custom message. If the editable Message Text row is missing, select this row for INI editing instructions.",
+      "help": "Current message: {value}. Select this row for INI editing instructions if the editable field is unavailable.",
       "type": "text",
       "valueOptions": {
         "sourceType": "PropertyValueString",
