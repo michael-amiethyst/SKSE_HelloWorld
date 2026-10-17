@@ -401,6 +401,9 @@ TEST_CASE("MCM Helper reloads notification text while NotificationService is run
         ScopedLogCapture logs;
         CHECK_FALSE(service.ReloadSettings(settings));
         CHECK(settings.ReloadMenuMessageText("last displayed text") == "last displayed text");
+        CHECK(settings.ReloadMenuMessageDelay(120) == 120);
+        std::filesystem::create_directory(overrides);
+        CHECK_FALSE(settings.SaveMenuMessageDelay(60));
         INFO(logs.Text());
         CHECK(logs.Text().find("error: MCM settings file cannot be opened: ") != std::string::npos);
         CHECK(logs.Text().find(defaults.filename().string()) != std::string::npos);

@@ -3,6 +3,7 @@
 #include "MCMHelperAPI.h"
 
 #include <chrono>
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 
@@ -92,4 +93,46 @@ TEST_CASE("Menu text reload reads external edits without rewriting the player IN
     CHECK(api.ReloadMenuMessageText(displayed) == "default");
     std::filesystem::remove(defaults);
     CHECK(api.ReloadMenuMessageText("previous").empty());
+}
+
+TEST_CASE("Menu delay reload follows external edits and clamps to the notification range", "[MCMHelperAPI]")
+{
+    const TestDataDirectory data;
+    const auto defaults = data.Get() / "MCM/Config/HelloWorld/settings.ini";
+    const auto overrides = data.Get() / "MCM/Settings/HelloWorld.ini";
+    WriteFile(defaults, "[General]\niMessageDelay=180\n");
+    MCMHelperAPI api("HelloWorld", data.Get());
+    CHECK(api.ReloadMenuMessageDelay(10) == 180);
+    for (const auto delay : {10, 600, 120, 0, 900}) {
+        const auto contents = "[General]\niMessageDelay=" + std::to_string(delay) + "\nsMessageText=keep me\n";
+        WriteFile(overrides, contents);
+        CHECK(api.ReloadMenuMessageDelay(180) == std::clamp(delay, 10, 600));
+        std::ifstream stream(overrides, std::ios::binary);
+        CHECK(std::string(std::istreambuf_iterator<char>(stream), {}) == contents);
+    }
+    WriteFile(overrides, "[General]\niMessageDelay=invalid\n");
+    CHECK(api.ReloadMenuMessageDelay(10) == 180);
+    std::filesystem::remove(overrides);
+    CHECK(api.ReloadMenuMessageDelay(10) == 180);
+    std::filesystem::remove(defaults);
+    CHECK(api.ReloadMenuMessageDelay(10) == 180);
+}
+
+TEST_CASE("Menu slider saves after an external edit even when selecting the old cached delay", "[MCMHelperAPI]")
+{
+    const TestDataDirectory data;
+    const auto overrides = data.Get() / "MCM/Settings/HelloWorld.ini";
+    WriteFile(overrides, "[General]\niMessageDelay=10\nsMessageText=first\n");
+    MCMHelperAPI api("HelloWorld", data.Get());
+    REQUIRE(api.Reload());
+    WriteFile(overrides, "[General]\niMessageDelay=600\nsMessageText=external edit\n[Other]\niValue=42\n");
+    REQUIRE(api.SaveMenuMessageDelay(10));
+    CHECK(api.ReloadMenuMessageDelay(180) == 10);
+    CHECK(api.GetModSettingString("sMessageText:General", "") == "external edit");
+    CHECK(api.GetModSettingInt("iValue:Other", 0) == 42);
+    std::filesystem::remove(overrides);
+    REQUIRE(api.SaveMenuMessageDelay(900));
+    CHECK(api.ReloadMenuMessageDelay(180) == 600);
+    REQUIRE(api.SaveMenuMessageDelay(0));
+    CHECK(api.ReloadMenuMessageDelay(180) == 10);
 }

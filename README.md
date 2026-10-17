@@ -17,7 +17,9 @@ visible **Message Text (VR fallback)** row shows the current value and offers
 instructions: edit `sMessageText` under `[General]` in
 `Data/MCM/Settings/HelloWorld.ini`, then reopen the mod's menu to apply it.
 The fallback row reads the backing file on every menu open, so its displayed
-text updates too. If a file cannot be read, the row retains its previous value
+text updates too. The delay slider also reloads from the backing file on menu
+open, clamps to 10–600 seconds, and persists subsequent slider edits while
+preserving other settings. If a file cannot be read, the row retains its previous value
 and the failure is logged. Opening the menu does not rewrite the INI.
 
 HelloWorld logs its DLL version, MCM asset paths and checks, menu script

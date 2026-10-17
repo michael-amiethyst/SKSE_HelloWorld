@@ -149,14 +149,26 @@ namespace
         SKSE::Init(skse);
         InitializeLogging();
 
-        SKSE::GetPapyrusInterface()->Register([](RE::BSScript::IVirtualMachine* vm) {
+        const bool registerSuccess = SKSE::GetPapyrusInterface()->Register([](RE::BSScript::IVirtualMachine* vm) {
             vm->RegisterFunction("ReadMenuMessageText", "HelloWorldMCM",
                 +[](RE::TESQuest*, std::string currentText) -> std::string {
                     return mcmSettings.ReloadMenuMessageText(currentText);
                 });
-            SKSE::log::info("MCM backing-file text reader registered");
+            vm->RegisterFunction("ReadMenuMessageDelay", "HelloWorldMCM",
+                +[](RE::TESQuest*, std::int32_t currentDelay) -> std::int32_t {
+                    return mcmSettings.ReloadMenuMessageDelay(currentDelay);
+                });
+            vm->RegisterFunction("WriteMenuMessageDelay", "HelloWorldMCM",
+                +[](RE::TESQuest*, std::int32_t delay) -> bool {
+                    return mcmSettings.SaveMenuMessageDelay(delay);
+                });
+            SKSE::log::info("MCM backing-file text and delay readers/writer registered");
             return true;
         });
+        if (!registerSuccess) {
+            SKSE::log::error("Failed to register HelloWorld Papyrus callback; plugin initialization aborted");
+            return false;
+        }
 
         if (auto* eventSource = SKSE::GetModCallbackEventSource()) {
             eventSource->AddEventSink(&settingsChangedEventSink);

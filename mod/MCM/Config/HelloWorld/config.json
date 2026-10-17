@@ -18,7 +18,10 @@
         "max": 600,
         "step": 10,
         "formatString": "{0} seconds",
-        "sourceType": "ModSettingInt"
+        "sourceType": "PropertyValueInt",
+        "scriptName": "HelloWorldMCM",
+        "propertyName": "MenuMessageDelay",
+        "defaultValue": 180
       }
     },
     {

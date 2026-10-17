@@ -4,14 +4,22 @@ String Property MessageDelaySetting = "iMessageDelay:General" AutoReadOnly
 String Property MessageTextSetting = "sMessageText:General" AutoReadOnly
 String Property SettingsChangedEvent = "HelloWorld_SettingsChanged" AutoReadOnly
 String Property MenuMessageText = "" Auto
+Int Property MenuMessageDelay = 180 Auto
 
 ; Registered by the HelloWorld DLL; reads the INI instead of MCM Helper's cache.
 String Function ReadMenuMessageText(String currentText) Native
+Int Function ReadMenuMessageDelay(Int currentDelay) Native
+Bool Function WriteMenuMessageDelay(Int delay) Native
 
 Event OnSettingChange(String a_ID)
     Debug.Trace("[HelloWorld MCM @PROJECT_VERSION@] OnSettingChange: " + a_ID)
     If a_ID == MessageDelaySetting
-        SendModEvent("HelloWorld_MessageDelayChanged", a_ID, GetModSettingInt(a_ID))
+        If WriteMenuMessageDelay(MenuMessageDelay)
+            SendModEvent("HelloWorld_MessageDelayChanged", a_ID, MenuMessageDelay)
+        Else
+            MenuMessageDelay = ReadMenuMessageDelay(MenuMessageDelay)
+        EndIf
+        RefreshMenu()
     ElseIf a_ID == MessageTextSetting
         MenuMessageText = GetModSettingString(a_ID)
         SendModEvent("HelloWorld_MessageTextChanged", GetModSettingString(a_ID))
@@ -22,6 +30,7 @@ EndEvent
 Event OnConfigOpen()
     Parent.OnConfigOpen()
     MenuMessageText = ReadMenuMessageText(MenuMessageText)
+    MenuMessageDelay = ReadMenuMessageDelay(MenuMessageDelay)
     RefreshMenu()
     Debug.Trace("[HelloWorld MCM @PROJECT_VERSION@] Menu opened")
     SendModEvent("HelloWorld_MenuOpened", "@PROJECT_VERSION@")

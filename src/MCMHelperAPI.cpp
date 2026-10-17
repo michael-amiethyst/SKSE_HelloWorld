@@ -1,6 +1,7 @@
 #include "MCMHelperAPI.h"
 
 #include <fstream>
+#include <algorithm>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -84,6 +85,43 @@ std::string MCMHelperAPI::ReloadMenuMessageText(const std::string_view currentTe
     auto text = GetModSettingString("sMessageText:General", "");
     spdlog::debug("MCM menu text reloaded from disk ({} bytes)", text.size());
     return text;
+}
+
+std::int32_t MCMHelperAPI::ReloadMenuMessageDelay(const std::int32_t currentDelay)
+{
+    if (!Reload()) {
+        spdlog::error("MCM menu delay reload failed; retaining displayed delay");
+        return currentDelay;
+    }
+    const auto delay = std::clamp(GetModSettingInt("iMessageDelay:General", 180), 10, 600);
+    spdlog::debug("MCM menu delay reloaded from disk ({} seconds)", delay);
+    return delay;
+}
+
+bool MCMHelperAPI::SaveMenuMessageDelay(const std::int32_t delay)
+{
+    std::scoped_lock lock(mutex_);
+    CSimpleIniA overrides;
+    overrides.SetUnicode();
+    if (!LoadIfPresent_(overrides, settingsPath_)) {
+        return false;
+    }
+    overrides.SetLongValue("General", "iMessageDelay", std::clamp(delay, 10, 600));
+    std::string contents;
+    if (overrides.Save(contents) < SI_OK) {
+        return false;
+    }
+    std::error_code error;
+    std::filesystem::create_directories(settingsPath_.parent_path(), error);
+    std::ofstream stream(settingsPath_, std::ios::binary | std::ios::trunc);
+    stream << contents;
+    stream.close(); // explicit close so we can check for errors
+    if (error || !stream) {
+        spdlog::error("MCM menu delay could not be saved: {}", settingsPath_.string());
+        return false;
+    }
+    spdlog::info("MCM menu delay saved ({} seconds)", std::clamp(delay, 10, 600));
+    return true;
 }
 
 std::int32_t MCMHelperAPI::GetModSettingInt(const std::string_view settingId,
