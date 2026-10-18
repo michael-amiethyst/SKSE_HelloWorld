@@ -2,22 +2,24 @@
 
 HelloWorld is an SKSE VR plugin that reports whether the active OpenVR headset
 connection is wired or wireless. It includes its own menu configuration for
-exposing the notification delay and Message Text through SkyUI's Mod Configuration Menu (MCM).
+exposing the notification delay and Popup Message through SkyUI's Mod Configuration Menu (MCM).
 
 The MCM's Papyrus script sends the selected delay and message text directly to
 the native plugin with `HelloWorld_MessageDelayChanged` and
 `HelloWorld_MessageTextChanged`. Delay changes replace the active countdown.
 Saved settings also load when a game loads or the mod's menu opens.
-Message Text defaults to an empty string.
+Popup Message defaults to an empty string.
 Nonblank text replaces the headset connection messages; clearing it (or entering
 only whitespace) restores the default messages.
 
 SkyUI VR builds without MCM input-row support hide the editable text field. The
-visible **Message Text** heading has the current value on the following rows.
-Messages wrap at word boundaries into rows of up to 32 characters; long words
-split across rows without breaking UTF-8 characters. Eight lines are displayed
-at a time, with Previous/Next controls for longer messages. Notification text
-and the saved INI are unaffected by display wrapping.
+visible **Popup Message (96 chars only)** heading previews the first 96
+characters in up to four rows of 32 characters, followed by **End of Message**.
+If the backing-file value exceeds 96 characters, that marker becomes
+**Warning: popup cutoff at 96**. Wrapping prefers word boundaries; if necessary,
+it packs text into rows and treats line breaks as spaces to fit the preview.
+UTF-8 characters are never split. The full saved value and notification text
+are unaffected by preview formatting; the warning describes the popup's limit.
 Select a message line for instructions: edit `sMessageText` under `[General]` in
 `Data/MCM/Settings/HelloWorld.ini`, then reopen the mod's menu to apply it.
 The message display reads the backing file on every menu open, so its displayed

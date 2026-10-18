@@ -27,8 +27,8 @@
     },
     {
       "id": "sMessageText:General",
-      "text": "Message Text",
-      "help": "Custom notification text for headcanon, notes or reminders. When blank the default headset connection messages display.",
+      "text": "Popup Message (96 chars only)",
+      "help": "Custom popup text, limited to 96 characters by the notification display. Leave blank for default headset messages.",
       "type": "input",
       "valueOptions": {
         "sourceType": "ModSettingString"
@@ -36,7 +36,7 @@
     },
     {
       "type": "header",
-      "text": "Message Text"
+      "text": "Popup Message (96 chars only)"
     }
   ]
 }

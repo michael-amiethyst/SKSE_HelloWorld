@@ -1,7 +1,5 @@
 #include "MessageTextLayout.h"
 
-#include <algorithm>
-#include <span>
 #include <utility>
 
 namespace
@@ -28,6 +26,15 @@ namespace
     bool IsSpace(const char value)
     {
         return value == ' ' || value == '\t' || value == '\f' || value == '\v';
+    }
+
+    std::size_t PrefixBytes(const std::string_view text, const std::size_t characters)
+    {
+        std::size_t offset = 0;
+        for (std::size_t count = 0; count < characters && offset < text.size(); ++count) {
+            offset += CharacterBytes(text.substr(offset));
+        }
+        return offset;
     }
 }
 
@@ -85,13 +92,26 @@ std::vector<std::string> MessageTextLayout::Wrap(const std::string_view text)
     return lines;
 }
 
-MessageTextLayout::Page MessageTextLayout::GetPage(const std::string_view text, const int requestedPage)
+MessageTextLayout::Preview MessageTextLayout::GetPreview(const std::string_view text)
 {
-    auto lines = Wrap(text);
-    const auto count = (lines.size() + RowsPerPage - 1) / RowsPerPage;
-    const auto index = std::min(static_cast<std::size_t>(std::max(requestedPage, 0)), count - 1);
-    const auto first = index * RowsPerPage;
-    const auto last = std::min(first + RowsPerPage, lines.size());
-    const auto page = std::span<const std::string>{lines}.subspan(first, last - first);
-    return {std::vector<std::string>(page.begin(), page.end()), index, count};
+    const auto end = PrefixBytes(text, PopupCharacterLimit);
+    auto lines = Wrap(text.substr(0, end));
+    if (lines.size() > PreviewLines) {
+        // Many short lines or poorly packing words can exceed four rows even
+        // below 96 characters. Fall back to packed rows so no preview text is lost.
+        std::string packed(text.substr(0, end));
+        for (auto& character : packed) {
+            if (character == '\r' || character == '\n' || IsSpace(character)) {
+                character = ' ';
+            }
+        }
+        lines.clear();
+        std::string_view remaining(packed);
+        while (!remaining.empty()) {
+            const auto bytes = PrefixBytes(remaining, RowWidth);
+            lines.emplace_back(remaining.substr(0, bytes));
+            remaining.remove_prefix(bytes);
+        }
+    }
+    return {std::move(lines), end < text.size()};
 }

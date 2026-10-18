@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "MCMHelperAPI.h"
+#include "MessageTextLayout.h"
 
 #include <chrono>
 #include <algorithm>
@@ -93,6 +94,24 @@ TEST_CASE("Menu text reload reads external edits without rewriting the player IN
     CHECK(api.ReloadMenuMessageText(displayed) == "default");
     std::filesystem::remove(defaults);
     CHECK(api.ReloadMenuMessageText("previous").empty());
+}
+
+TEST_CASE("Popup marker uses the reloaded backing-file length", "[MCMHelperAPI][MessageTextLayout][integration]")
+{
+    const TestDataDirectory data;
+    const auto overrides = data.Get() / "MCM/Settings/HelloWorld.ini";
+    MCMHelperAPI api("HelloWorld", data.Get());
+    for (const auto length : {97, 96, 0}) {
+        const auto contents = "[General]\nsMessageText=" + std::string(length, 'x') + '\n';
+        WriteFile(overrides, contents);
+        const auto text = api.ReloadMenuMessageText("stale");
+        const auto preview = MessageTextLayout::GetPreview(text);
+        CHECK(preview.exceedsPopupLimit == (length > 96));
+        CHECK(preview.EndMarker() == (length > 96 ? MessageTextLayout::CutoffWarning : "End of Message"));
+        CHECK(text.size() == static_cast<std::size_t>(length));
+        std::ifstream stream(overrides, std::ios::binary);
+        CHECK(std::string(std::istreambuf_iterator<char>(stream), {}) == contents);
+    }
 }
 
 TEST_CASE("Menu delay reload follows external edits and clamps to the notification range", "[MCMHelperAPI]")

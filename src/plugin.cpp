@@ -163,17 +163,17 @@ namespace
                 +[](RE::TESQuest*, std::int32_t delay) -> bool {
                     return mcmSettings.SaveMenuMessageDelay(delay);
                 });
-            vm->RegisterFunction("GetMessagePageCount", "HelloWorldMCM",
-                +[](RE::TESQuest*, std::string text) -> std::int32_t {
-                    return static_cast<std::int32_t>(MessageTextLayout::GetPage(text, 0).count);
+            vm->RegisterFunction("GetMessageEndMarker", "HelloWorldMCM",
+                +[](RE::TESQuest*, std::string text) -> std::string {
+                    return std::string(MessageTextLayout::GetPreview(text).EndMarker());
                 });
             vm->RegisterFunction("GetMessageLineCount", "HelloWorldMCM",
-                +[](RE::TESQuest*, std::string text, std::int32_t page) -> std::int32_t {
-                    return static_cast<std::int32_t>(MessageTextLayout::GetPage(text, page).lines.size());
+                +[](RE::TESQuest*, std::string text) -> std::int32_t {
+                    return static_cast<std::int32_t>(MessageTextLayout::GetPreview(text).lines.size());
                 });
             vm->RegisterFunction("GetMessageLine", "HelloWorldMCM",
-                +[](RE::TESQuest*, std::string text, std::int32_t page, std::int32_t line) -> std::string {
-                    const auto layout = MessageTextLayout::GetPage(text, page);
+                +[](RE::TESQuest*, std::string text, std::int32_t line) -> std::string {
+                    const auto layout = MessageTextLayout::GetPreview(text);
                     return line >= 0 && static_cast<std::size_t>(line) < layout.lines.size()
                         ? layout.lines[line] : std::string{};
                 });
