@@ -92,14 +92,28 @@ std::vector<std::string> MessageTextLayout::Wrap(const std::string_view text)
     return lines;
 }
 
+std::string MessageTextLayout::LimitPopupMessage(const std::string_view text)
+{
+    return std::string(text.substr(0, PrefixBytes(text, PopupCharacterLimit)));
+}
+
+std::string MessageTextLayout::FormatMenuMessage(const std::string_view text)
+{
+    auto message = LimitPopupMessage(text);
+    if (message.size() < text.size()) {
+        message += TruncationSuffix;
+    }
+    return message;
+}
+
 MessageTextLayout::Preview MessageTextLayout::GetPreview(const std::string_view text)
 {
-    const auto end = PrefixBytes(text, PopupCharacterLimit);
-    auto lines = Wrap(text.substr(0, end));
+    const auto limited = FormatMenuMessage(text);
+    auto lines = Wrap(limited);
     if (lines.size() > PreviewLines) {
         // Many short lines or poorly packing words can exceed four rows even
-        // below 96 characters. Fall back to packed rows so no preview text is lost.
-        std::string packed(text.substr(0, end));
+        // within the menu budget. Pack rows so no message or suffix text is lost.
+        std::string packed(limited);
         for (auto& character : packed) {
             if (character == '\r' || character == '\n' || IsSpace(character)) {
                 character = ' ';
@@ -113,5 +127,5 @@ MessageTextLayout::Preview MessageTextLayout::GetPreview(const std::string_view 
             remaining.remove_prefix(bytes);
         }
     }
-    return {std::move(lines), end < text.size()};
+    return {std::move(lines)};
 }

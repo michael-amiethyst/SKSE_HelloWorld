@@ -83,8 +83,9 @@ The collector runs the NotificationService and MCMHelperAPI cases, including
 integration tests that reload INI settings while notifications are running. Its
 report includes both classes and MessageTextLayout (`.cpp` and `.h` files).
 MessageTextLayout tests cover word wrapping, UTF-8 boundaries, explicit line
-breaks, the four-row preview, and the 96-character popup cutoff marker. Integration
-tests check the marker after backing-file edits. MCMHelperAPI's runtime version
+breaks, the four-row preview, and the 96-character popup limit with its truncation
+suffix. Integration tests verify menu and notification text after backing-file
+edits, including exact-length values. MCMHelperAPI's runtime version
 query needs Skyrim's Papyrus VM and is not exercised by the standalone suite.
 Results are written under the build directory:
 

@@ -96,7 +96,7 @@ TEST_CASE("Menu text reload reads external edits without rewriting the player IN
     CHECK(api.ReloadMenuMessageText("previous").empty());
 }
 
-TEST_CASE("Popup marker uses the reloaded backing-file length", "[MCMHelperAPI][MessageTextLayout][integration]")
+TEST_CASE("Popup INI reads limit overlength values and accept exactly 96 characters", "[MCMHelperAPI][MessageTextLayout][integration]")
 {
     const TestDataDirectory data;
     const auto overrides = data.Get() / "MCM/Settings/HelloWorld.ini";
@@ -105,10 +105,10 @@ TEST_CASE("Popup marker uses the reloaded backing-file length", "[MCMHelperAPI][
         const auto contents = "[General]\nsMessageText=" + std::string(length, 'x') + '\n';
         WriteFile(overrides, contents);
         const auto text = api.ReloadMenuMessageText("stale");
-        const auto preview = MessageTextLayout::GetPreview(text);
-        CHECK(preview.exceedsPopupLimit == (length > 96));
-        CHECK(preview.EndMarker() == (length > 96 ? MessageTextLayout::CutoffWarning : "End of Message"));
-        CHECK(text.size() == static_cast<std::size_t>(length));
+        const auto expected = length > 96 ? std::string(96, 'x') + " [truncated]" : std::string(length, 'x');
+        CHECK(text == expected);
+        CHECK(text.size() <= 108);
+        CHECK(MessageTextLayout::GetPreview(text).lines.size() <= 4);
         std::ifstream stream(overrides, std::ios::binary);
         CHECK(std::string(std::istreambuf_iterator<char>(stream), {}) == contents);
     }

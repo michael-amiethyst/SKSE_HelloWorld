@@ -6,6 +6,8 @@
 #include <vector>
 
 using MessageTextLayout::GetPreview;
+using MessageTextLayout::LimitPopupMessage;
+using MessageTextLayout::FormatMenuMessage;
 using MessageTextLayout::Wrap;
 
 TEST_CASE("Message wrapping leaves short text intact and handles the cutoff boundary", "[MessageTextLayout]")
@@ -58,12 +60,11 @@ TEST_CASE("Message wrapping tolerates incomplete or malformed UTF-8 without drop
     CHECK(Wrap("\xC3" "broken") == std::vector<std::string>{"\xC3" "broken"});
 }
 
-TEST_CASE("Popup previews through 96 characters end normally", "[MessageTextLayout]")
+TEST_CASE("Popup messages shorter than 96 characters pass unchanged", "[MessageTextLayout]")
 {
-    for (const auto length : {0, 1, 95, 96}) {
+    for (const auto length : {0, 1, 95}) {
+        CHECK(LimitPopupMessage(std::string(length, 'x')) == std::string(length, 'x'));
         const auto preview = GetPreview(std::string(length, 'x'));
-        CHECK_FALSE(preview.exceedsPopupLimit);
-        CHECK(preview.EndMarker() == "End of Message");
         CHECK(preview.lines.size() <= MessageTextLayout::PreviewLines);
         std::string recovered;
         for (const auto& line : preview.lines) {
@@ -74,14 +75,29 @@ TEST_CASE("Popup previews through 96 characters end normally", "[MessageTextLayo
     }
 }
 
-TEST_CASE("Popup previews warn above 96 characters and show only the popup prefix", "[MessageTextLayout]")
+TEST_CASE("A 96-character popup message passes unchanged as valid", "[MessageTextLayout]")
+{
+    const std::string valid(96, 'x');
+    CHECK(LimitPopupMessage(valid) == valid);
+    CHECK(FormatMenuMessage(valid) == valid);
+    CHECK(LimitPopupMessage(valid).find(" [truncated]") == std::string::npos);
+    CHECK(GetPreview(valid).lines == std::vector<std::string>{std::string(32, 'x'), std::string(32, 'x'), std::string(32, 'x')});
+}
+
+TEST_CASE("Menu messages retain all 96 popup characters before the truncation suffix", "[MessageTextLayout]")
 {
     for (const auto length : {97, 10000}) {
         const std::string original = std::string(96, 'x') + std::string(length - 96, 'z');
+        const auto limited = LimitPopupMessage(original);
+        CHECK(limited == std::string(96, 'x'));
+        CHECK(limited.size() == 96);
+        CHECK(LimitPopupMessage(limited) == limited);
+        const auto menu = FormatMenuMessage(original);
+        CHECK(menu == std::string(96, 'x') + " [truncated]");
+        CHECK(menu.size() == 108);
+        CHECK(FormatMenuMessage(menu) == menu);
         const auto preview = GetPreview(original);
-        CHECK(preview.exceedsPopupLimit);
-        CHECK(preview.EndMarker() == MessageTextLayout::CutoffWarning);
-        CHECK(preview.lines == std::vector<std::string>{std::string(32, 'x'), std::string(32, 'x'), std::string(32, 'x')});
+        CHECK(preview.lines == std::vector<std::string>{std::string(32, 'x'), std::string(32, 'x'), std::string(32, 'x'), "[truncated]"});
         CHECK(original.size() == static_cast<std::size_t>(length));
     }
 }
@@ -90,15 +106,12 @@ TEST_CASE("Popup preview preserves four explicit lines", "[MessageTextLayout]")
 {
     const auto preview = GetPreview("First\nSecond\nThird\nFourth");
     CHECK(preview.lines == std::vector<std::string>{"First", "Second", "Third", "Fourth"});
-    CHECK(preview.EndMarker() == "End of Message");
 }
 
 TEST_CASE("Popup preview packs excess short lines without losing content", "[MessageTextLayout]")
 {
     const auto preview = GetPreview("1\n2\r3\t\n4\f\v5\n6");
     CHECK(preview.lines == std::vector<std::string>{"1 2 3  4  5 6"});
-    CHECK_FALSE(preview.exceedsPopupLimit);
-    CHECK(preview.EndMarker() == "End of Message");
 }
 
 TEST_CASE("Popup preview packs words that would otherwise require more than four rows", "[MessageTextLayout]")
@@ -114,7 +127,6 @@ TEST_CASE("Popup preview packs words that would otherwise require more than four
         recovered += line;
     }
     CHECK(recovered == text);
-    CHECK(preview.EndMarker() == "End of Message");
 }
 
 TEST_CASE("Popup preview counts UTF-8 characters rather than bytes at the limit", "[MessageTextLayout]")
@@ -124,21 +136,30 @@ TEST_CASE("Popup preview counts UTF-8 characters rather than bytes at the limit"
         for (int i = 0; i < 96; ++i) {
             text += character;
         }
-        const auto exact = GetPreview(text);
-        CHECK_FALSE(exact.exceedsPopupLimit);
+        CHECK(LimitPopupMessage(text) == text);
         const auto longer = GetPreview(text + character);
-        CHECK(longer.exceedsPopupLimit);
-        CHECK(longer.lines == exact.lines);
         std::string recovered;
         for (const auto& line : longer.lines) {
             recovered += line;
         }
-        CHECK(recovered == text);
+        CHECK(recovered == text + "[truncated]");
+        CHECK(FormatMenuMessage(text + character) == text + " [truncated]");
+        CHECK(LimitPopupMessage(text + character) == text);
     }
 }
 
-TEST_CASE("Popup preview marker labels fit a single menu row", "[MessageTextLayout]")
+TEST_CASE("Full popup prefix and suffix fit the four-row menu budget", "[MessageTextLayout]")
 {
-    CHECK(MessageTextLayout::EndOfMessage.size() <= MessageTextLayout::RowWidth);
-    CHECK(MessageTextLayout::CutoffWarning.size() <= MessageTextLayout::RowWidth);
+    CHECK(MessageTextLayout::MenuCharacterLimit == 108);
+    CHECK(MessageTextLayout::MenuCharacterLimit <= MessageTextLayout::RowWidth * MessageTextLayout::PreviewLines);
+    const auto word = std::string(17, 'x');
+    const auto text = word + ' ' + word + ' ' + word + ' ' + word + ' ' + word + ' ' + word;
+    const auto preview = GetPreview(text);
+    CHECK(preview.lines.size() <= 4);
+    std::string recovered;
+    for (const auto& line : preview.lines) {
+        CHECK(line.size() <= 32);
+        recovered += line;
+    }
+    CHECK(recovered == text.substr(0, 96) + " [truncated]");
 }

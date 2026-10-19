@@ -1,4 +1,5 @@
 #include "MCMHelperAPI.h"
+#include "MessageTextLayout.h"
 
 #include <fstream>
 #include <algorithm>
@@ -82,7 +83,7 @@ std::string MCMHelperAPI::ReloadMenuMessageText(const std::string_view currentTe
         spdlog::error("MCM menu text reload failed; retaining displayed text");
         return std::string(currentText);
     }
-    auto text = GetModSettingString("sMessageText:General", "");
+    auto text = MessageTextLayout::FormatMenuMessage(GetModSettingString("sMessageText:General", ""));
     spdlog::debug("MCM menu text reloaded from disk ({} bytes)", text.size());
     return text;
 }

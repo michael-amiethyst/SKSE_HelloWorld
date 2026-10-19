@@ -1,5 +1,6 @@
 #include "NotificationService.h"
 #include "MCMHelperAPI.h"
+#include "MessageTextLayout.h"
 
 #include <algorithm>
 #include <chrono>
@@ -46,7 +47,7 @@ void NotificationService::SetMessageText(std::string text) {
         text.clear();
     }
     std::scoped_lock lock(mutex_);
-    message_text_ = std::move(text);
+    message_text_ = MessageTextLayout::LimitPopupMessage(text);
     spdlog::info("NotificationService message text: {} ({} bytes)",
                  message_text_.empty() ? "transport default" : "custom", message_text_.size());
 }

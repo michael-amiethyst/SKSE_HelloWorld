@@ -375,7 +375,8 @@ TEST_CASE("MCM Helper reloads notification text while NotificationService is run
     REQUIRE(probe.WaitForCount(1, 1s));
     CHECK(probe.At(0).message == NotificationService::GetMessage_(HeadMountedDisplay::Transport::kWireless));
 
-    for (const std::string text : {"Custom courier", "Replacement", "", "   "}) {
+    for (const std::string text : std::vector<std::string>{"Custom courier", "Replacement", "", "   ",
+                                                         std::string(96, 'x'), std::string(97, 'x')}) {
         std::ofstream(overrides) << "[General]\nsMessageText=" << text << '\n';
         const auto displayedText = settings.ReloadMenuMessageText("stale menu value");
         REQUIRE(service.ReloadSettings(settings));
@@ -383,9 +384,11 @@ TEST_CASE("MCM Helper reloads notification text while NotificationService is run
         service.SetMessageDelay(20ms);
         const auto count = probe.Count();
         REQUIRE(probe.WaitForCount(count + 1, 1s));
+        const auto expected = text.substr(0, 96);
+        const auto expectedMenu = text.size() > 96 ? expected + " [truncated]" : text;
         CHECK(probe.At(count).message == (text.find_first_not_of(' ') == std::string::npos
-            ? NotificationService::GetMessage_(HeadMountedDisplay::Transport::kWireless) : text));
-        CHECK(displayedText == (text.find_first_not_of(' ') == std::string::npos ? "" : text));
+            ? NotificationService::GetMessage_(HeadMountedDisplay::Transport::kWireless) : expected));
+        CHECK(displayedText == (text.find_first_not_of(' ') == std::string::npos ? "" : expectedMenu));
     }
     service.Stop();
 

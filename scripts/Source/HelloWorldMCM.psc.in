@@ -6,14 +6,12 @@ String Property SettingsChangedEvent = "HelloWorld_SettingsChanged" AutoReadOnly
 String Property MenuMessageText = "" Auto
 Int Property MenuMessageDelay = 180 Auto
 
-Int endOfMessageOption = -1
 Int[] messageLineOptions
 
 ; Registered by the HelloWorld DLL; reads the INI instead of MCM Helper's cache.
 String Function ReadMenuMessageText(String currentText) Native
 Int Function ReadMenuMessageDelay(Int currentDelay) Native
 Bool Function WriteMenuMessageDelay(Int delay) Native
-String Function GetMessageEndMarker(String text) Native
 Int Function GetMessageLineCount(String text) Native
 String Function GetMessageLine(String text, Int line) Native
 
@@ -56,7 +54,6 @@ Event OnPageReset(String a_page)
         EndIf
         line += 1
     EndWhile
-    endOfMessageOption = AddTextOption(GetMessageEndMarker(MenuMessageText), "", 0)
 EndEvent
 
 Bool Function IsMessageLine(Int option)
@@ -74,7 +71,7 @@ Bool Function IsMessageLine(Int option)
 EndFunction
 
 Event OnOptionSelect(Int a_option)
-    If IsMessageLine(a_option) || a_option == endOfMessageOption
+    If IsMessageLine(a_option)
         ShowMessageTextHelp()
     Else
         Parent.OnOptionSelect(a_option)
@@ -84,8 +81,6 @@ EndEvent
 Event OnOptionHighlight(Int a_option)
     If IsMessageLine(a_option)
         SetInfoText("Custom popup message. Select a line for INI editing instructions.")
-    ElseIf a_option == endOfMessageOption
-        SetInfoText("Popup messages show only the first 96 characters. Longer backing-file values display a cutoff warning.")
     Else
         Parent.OnOptionHighlight(a_option)
     EndIf

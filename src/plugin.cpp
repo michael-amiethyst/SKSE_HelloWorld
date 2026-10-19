@@ -163,10 +163,6 @@ namespace
                 +[](RE::TESQuest*, std::int32_t delay) -> bool {
                     return mcmSettings.SaveMenuMessageDelay(delay);
                 });
-            vm->RegisterFunction("GetMessageEndMarker", "HelloWorldMCM",
-                +[](RE::TESQuest*, std::string text) -> std::string {
-                    return std::string(MessageTextLayout::GetPreview(text).EndMarker());
-                });
             vm->RegisterFunction("GetMessageLineCount", "HelloWorldMCM",
                 +[](RE::TESQuest*, std::string text) -> std::int32_t {
                     return static_cast<std::int32_t>(MessageTextLayout::GetPreview(text).lines.size());
