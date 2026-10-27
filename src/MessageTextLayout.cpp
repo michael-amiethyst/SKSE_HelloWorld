@@ -1,5 +1,8 @@
 #include "MessageTextLayout.h"
 
+#include <utf8.h>
+
+#include <iterator>
 #include <utility>
 
 namespace
@@ -8,19 +11,13 @@ namespace
     // between rows. Treat malformed bytes as individual characters.
     std::size_t CharacterBytes(const std::string_view text)
     {
-        const auto lead = static_cast<unsigned char>(text.front());
-        const std::size_t length = lead >= 0xF0 && lead <= 0xF4 ? 4 :
-                                   lead >= 0xE0 && lead <= 0xEF ? 3 :
-                                   lead >= 0xC2 && lead <= 0xDF ? 2 : 1;
-        if (text.size() < length) {
+        auto next = text.begin();
+        try {
+            utf8::next(next, text.end());
+            return static_cast<std::size_t>(std::distance(text.begin(), next));
+        } catch (const utf8::exception&) {
             return 1;
         }
-        for (std::size_t i = 1; i < length; ++i) {
-            if ((static_cast<unsigned char>(text[i]) & 0xC0) != 0x80) {
-                return 1;
-            }
-        }
-        return length;
     }
 
     bool IsSpace(const char value)

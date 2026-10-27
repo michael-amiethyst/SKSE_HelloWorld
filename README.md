@@ -13,11 +13,12 @@ Nonblank text replaces the headset connection messages; clearing it (or entering
 only whitespace) restores the default messages.
 
 SkyUI VR builds without MCM input-row support hide the editable text field. The
-visible **Popup Message (96 chars only)** heading displays the message in up to
-four rows of 32 characters. Values of exactly 96 characters are valid and remain
-unchanged. For longer values, the menu shows the first 96 characters followed by
-` [truncated]` (108 characters total), while the popup uses just the first 96
-characters. Wrapping prefers word boundaries; if necessary,
+visible **Popup Message (86 chars only)** heading displays the message in up to
+four rows of 32 characters. Values of exactly 86 characters are valid and remain
+unchanged. For longer values, the menu shows the first 86 characters followed by
+` [truncated]` (98 characters total). The plugin sends the first 86 characters
+to the popup; Skyrim's notification layout can visually clip the text earlier.
+Wrapping prefers word boundaries; if necessary,
 it packs text into rows and treats line breaks as spaces to fit the preview.
 UTF-8 characters are never split. The INI is read without rewriting its saved value.
 Select a message line for instructions: edit `sMessageText` under `[General]` in

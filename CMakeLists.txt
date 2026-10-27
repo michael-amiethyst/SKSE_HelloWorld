@@ -14,7 +14,7 @@ if(NOT EXISTS "${REQUIRED_SEQ_FILE}")
 endif()
 
 # Set your project name. This will be the name of your SKSE .dll file.
-project(HelloWorld VERSION 0.3.9 LANGUAGES CXX)
+project(HelloWorld VERSION 0.3.10 LANGUAGES CXX)
 include(build-tools/VersionAssets.cmake)
 
 set(MOD_CONTENTS "${CMAKE_SOURCE_DIR}/build/ModContents")
@@ -36,6 +36,7 @@ add_custom_target(
 # Setup your SKSE plugin as an SKSE plugin!
 find_package(CommonLibSSE CONFIG REQUIRED)
 find_package(SimpleIni CONFIG REQUIRED)
+find_package(utf8cpp CONFIG REQUIRED)
 add_commonlibsse_plugin(
         ${PROJECT_NAME}
         SOURCES
@@ -52,7 +53,7 @@ add_commonlibsse_plugin(
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 standard
 target_precompile_headers(${PROJECT_NAME} PRIVATE lib/PCH.h) # <--- PCH.h is required!
 target_include_directories(${PROJECT_NAME} PRIVATE lib "${HELLOWORLD_GENERATED}")
-target_link_libraries(${PROJECT_NAME} PRIVATE SimpleIni::SimpleIni)
+target_link_libraries(${PROJECT_NAME} PRIVATE SimpleIni::SimpleIni utf8cpp::utf8cpp)
 add_dependencies(${PROJECT_NAME} HelloWorldAssets)
 
 include(CTest)
@@ -82,6 +83,7 @@ if(BUILD_TESTING)
             CommonLibSSE::CommonLibSSE
             Catch2::Catch2WithMain
             SimpleIni::SimpleIni
+            utf8cpp::utf8cpp
     )
 
     option(HELLOWORLD_TEST_COVERAGE "Enable MSVC native code coverage for HelloWorldTests" OFF)

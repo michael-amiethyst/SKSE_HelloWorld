@@ -27,8 +27,8 @@
     },
     {
       "id": "sMessageText:General",
-      "text": "Popup Message (96 chars only)",
-      "help": "Custom popup text, limited to 96 characters by the notification display. Leave blank for default headset messages.",
+      "text": "Popup Message (86 chars only)",
+      "help": "Custom popup text, capped at 86 characters. Skyrim may display less if the text does not fit. Leave blank for default headset messages.",
       "type": "input",
       "valueOptions": {
         "sourceType": "ModSettingString"
@@ -36,7 +36,7 @@
     },
     {
       "type": "header",
-      "text": "Popup Message (96 chars only)"
+      "text": "Popup Message (86 chars only)"
     }
   ]
 }

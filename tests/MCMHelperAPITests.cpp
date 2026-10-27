@@ -96,21 +96,55 @@ TEST_CASE("Menu text reload reads external edits without rewriting the player IN
     CHECK(api.ReloadMenuMessageText("previous").empty());
 }
 
-TEST_CASE("Popup INI reads limit overlength values and accept exactly 96 characters", "[MCMHelperAPI][MessageTextLayout][integration]")
+TEST_CASE("Popup INI reads limit overlength values and accept exactly 86 characters", "[MCMHelperAPI][MessageTextLayout][integration]")
 {
     const TestDataDirectory data;
     const auto overrides = data.Get() / "MCM/Settings/HelloWorld.ini";
     MCMHelperAPI api("HelloWorld", data.Get());
-    for (const auto length : {97, 96, 0}) {
+    for (const auto length : {87, 86, 96, 0}) {
         const auto contents = "[General]\nsMessageText=" + std::string(length, 'x') + '\n';
         WriteFile(overrides, contents);
         const auto text = api.ReloadMenuMessageText("stale");
-        const auto expected = length > 96 ? std::string(96, 'x') + " [truncated]" : std::string(length, 'x');
+        const auto expected = length > 86 ? std::string(86, 'x') + " [truncated]" : std::string(length, 'x');
         CHECK(text == expected);
-        CHECK(text.size() <= 108);
+        CHECK(text.size() <= 98);
         CHECK(MessageTextLayout::GetPreview(text).lines.size() <= 4);
         std::ifstream stream(overrides, std::ios::binary);
         CHECK(std::string(std::istreambuf_iterator<char>(stream), {}) == contents);
+    }
+}
+
+TEST_CASE("INI text truncates at character 87 before menu word wrapping", "[MCMHelperAPI][MessageTextLayout][integration]")
+{
+    const TestDataDirectory data;
+    const auto defaults = data.Get() / "MCM/Config/HelloWorld/settings.ini";
+    const auto overrides = data.Get() / "MCM/Settings/HelloWorld.ini";
+    const std::string group = "12345678 12345678 12345678";
+    const auto prefix = group + ' ' + group + ' ' + group + " END86";
+    REQUIRE(prefix.size() == 86);
+    MCMHelperAPI api("HelloWorld", data.Get());
+
+    // Exercise both config defaults and player overrides through the same reader
+    // and preview calls used by the Papyrus menu. Spaces count toward the limit.
+    for (const auto& path : {defaults, overrides}) {
+        for (const std::size_t length : {85, 86, 87, 96, 98, 128, 129, 256}) {
+            CAPTURE(path, length);
+            const auto original = length <= 86 ? prefix.substr(0, length) : prefix + std::string(length - 86, 'Z');
+            const auto contents = "[General]\nsMessageText=" + original + '\n';
+            WriteFile(path, contents);
+            const auto expected = length > 86 ? prefix + " [truncated]" : original;
+            const auto menu = api.ReloadMenuMessageText("stale menu value");
+            CHECK(menu == expected);
+            auto expectedRows = std::vector<std::string>{group, group, group + (length == 85 ? " END8" : " END86")};
+            if (length > 86) {
+                expectedRows.emplace_back("[truncated]");
+            }
+            CHECK(MessageTextLayout::GetPreview(menu).lines == expectedRows);
+            CHECK(MessageTextLayout::LimitPopupMessage(api.GetModSettingString("sMessageText:General", "")) ==
+                  original.substr(0, 86));
+            std::ifstream stream(path, std::ios::binary);
+            CHECK(std::string(std::istreambuf_iterator<char>(stream), {}) == contents);
+        }
     }
 }
 
