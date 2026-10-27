@@ -1,16 +1,25 @@
 #pragma once
 
-#include "OpenVRTransportDetector.h"
-
 #include <chrono>
 #include <condition_variable>
+#include <cstdint>
+#include <functional>
 #include <mutex>
+#include <string>
+#include <string_view>
 #include <thread>
+
+#include "HeadMountedDisplay.h"
+
+class MCMHelperAPI;
 
 class NotificationService
 {
 public:
-    explicit NotificationService(OpenVRTransportDetector& transportDetector);
+    using TransportProvider = std::function<HeadMountedDisplay::Transport()>;
+    using NotificationSender = std::function<void(std::string)>;
+
+    NotificationService(TransportProvider transportProvider, NotificationSender notificationSender);
     ~NotificationService();
 
     NotificationService(const NotificationService&) = delete;
@@ -18,14 +27,27 @@ public:
 
     void Start();
     void Stop();
+    // Restart an active countdown with the new interval.
+    void SetMessageDelay(std::chrono::steady_clock::duration delay);
+    // Blank text restores transport messages; preserve nonblank text verbatim.
+    void SetMessageText(std::string text);
+    // Reload MCM defaults/overrides, retaining active settings if loading fails.
+    bool ReloadSettings(MCMHelperAPI& settings);
+    // Apply live MCM values without relying on a settings file being visible yet.
+    bool HandleSettingChange(std::string_view eventName, std::string text, float delaySeconds);
+    static constexpr std::string_view DelayChangedEvent = "HelloWorld_MessageDelayChanged";
+    static constexpr std::string_view TextChangedEvent = "HelloWorld_MessageTextChanged";
 
     // VisibleForTesting
-    static const char* GetMessage_(OpenVRTransportDetector::Transport transport) noexcept;
+    static const char* GetMessage_(HeadMountedDisplay::Transport transport) noexcept;
 
 private:
-    static constexpr auto message_delay_ = std::chrono::minutes{3};
+    std::chrono::steady_clock::duration message_delay_{std::chrono::minutes{3}};
+    std::uint64_t delay_generation_{0};
+    std::string message_text_;
 
-    OpenVRTransportDetector& transportDetector_;
+    TransportProvider transport_provider_;
+    NotificationSender notification_sender_;
     std::jthread thread_;
     std::condition_variable_any timer_;
     std::mutex mutex_;

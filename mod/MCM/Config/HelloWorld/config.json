@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Exit-9B/MCM-Helper/main/docs/config.schema.json",
+  "modName": "HelloWorld",
+  "displayName": "Hello World",
+  "minMcmVersion": 13,
+  "cursorFillMode": "topToBottom",
+  "content": [
+    {
+      "type": "header",
+      "text": "General"
+    },
+    {
+      "id": "iMessageDelay:General",
+      "text": "Message delay",
+      "help": "Seconds between headset connection notifications.",
+      "type": "slider",
+      "valueOptions": {
+        "min": 10,
+        "max": 600,
+        "step": 10,
+        "formatString": "{0} seconds",
+        "sourceType": "PropertyValueInt",
+        "scriptName": "HelloWorldMCM",
+        "propertyName": "MenuMessageDelay",
+        "defaultValue": 180
+      }
+    },
+    {
+      "id": "sMessageText:General",
+      "text": "Popup Message (86 chars only)",
+      "help": "Custom popup text, capped at 86 characters. Skyrim may display less if the text does not fit. Leave blank for default headset messages.",
+      "type": "input",
+      "valueOptions": {
+        "sourceType": "ModSettingString"
+      }
+    },
+    {
+      "type": "header",
+      "text": "Popup Message (86 chars only)"
+    }
+  ]
+}

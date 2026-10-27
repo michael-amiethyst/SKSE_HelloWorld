@@ -2,7 +2,7 @@
 
 #include <memory>
 
-class OpenVRTransportDetector
+class HeadMountedDisplay
 {
 public:
     enum class Transport
@@ -12,11 +12,11 @@ public:
         kWireless
     };
 
-    OpenVRTransportDetector();
-    ~OpenVRTransportDetector();
+    HeadMountedDisplay();
+    ~HeadMountedDisplay();
 
-    OpenVRTransportDetector(const OpenVRTransportDetector&) = delete;
-    OpenVRTransportDetector& operator=(const OpenVRTransportDetector&) = delete;
+    HeadMountedDisplay(const HeadMountedDisplay&) = delete;
+    HeadMountedDisplay& operator=(const HeadMountedDisplay&) = delete;
 
     Transport GetTransport() const;
 

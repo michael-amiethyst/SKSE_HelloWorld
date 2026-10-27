@@ -1,2 +1,3 @@
 - 0.1.0 - Package dll as Vortex mod, initial GHA
 - 0.2.0 - Recurring messages, HMD integration
+- 0.3.0 - Config menu integration

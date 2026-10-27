@@ -2,6 +2,12 @@
     "version": 3,
     "configurePresets": [
         {
+            "name": "coverage",
+            "inherits": "release",
+            "displayName": "Unit test coverage",
+            "cacheVariables": { "HELLOWORLD_TEST_COVERAGE": "ON" }
+        },
+        {
             "name": "release",
             "inherits": ["base"],
             "displayName": "Release",
@@ -28,13 +34,18 @@
                 "CMAKE_CXX_FLAGS": "/permissive- /Zc:preprocessor /EHsc /MP /W4 -DWIN32_LEAN_AND_MEAN -DNOMINMAX -DUNICODE -D_UNICODE",
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "VCPKG_TARGET_TRIPLET": "x64-windows-static",
-                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake",
+                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/build-tools",
                 "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         }
     ],
     "buildPresets": [
+        {
+            "name": "coverage",
+            "configurePreset": "coverage",
+            "targets": ["HelloWorldTests"]
+        },
         {
             "name": "release",
             "configurePreset": "release"

@@ -1,12 +1,12 @@
-#include "OpenVRTransportDetector.h"
-
-#include <openvr/openvr_capi.h>
 #include <Windows.h>
+#include <openvr/openvr_capi.h>
 
 #include <filesystem>
 #include <string>
 
-struct OpenVRTransportDetector::Impl
+#include "HeadMountedDisplay.h"
+
+struct HeadMountedDisplay::Impl
 {
     using GetGenericInterface = std::intptr_t(__cdecl*)(const char*, EVRInitError*);
 
@@ -85,13 +85,13 @@ struct OpenVRTransportDetector::Impl
     bool loadedModule{};
 };
 
-OpenVRTransportDetector::OpenVRTransportDetector() :
+HeadMountedDisplay::HeadMountedDisplay() :
     impl_(std::make_unique<Impl>())
 {}
 
-OpenVRTransportDetector::~OpenVRTransportDetector() = default;
+HeadMountedDisplay::~HeadMountedDisplay() = default;
 
-OpenVRTransportDetector::Transport OpenVRTransportDetector::GetTransport() const
+HeadMountedDisplay::Transport HeadMountedDisplay::GetTransport() const
 {
     SKSE::log::debug("OpenVR transport detection started");
     const auto* system = impl_->GetSystem();
@@ -119,7 +119,7 @@ OpenVRTransportDetector::Transport OpenVRTransportDetector::GetTransport() const
     return transport;
 }
 
-OpenVRTransportDetector::Transport OpenVRTransportDetector::DetermineTransport_(const bool propertyReadSucceeded,
+HeadMountedDisplay::Transport HeadMountedDisplay::DetermineTransport_(const bool propertyReadSucceeded,
                                                                                 const bool isWireless) noexcept
 {
     if (!propertyReadSucceeded) {

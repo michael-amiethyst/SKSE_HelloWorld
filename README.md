@@ -1,61 +1,108 @@
-> 📜 other templates available at https://github.com/SkyrimScripting/SKSE_Templates
+# HelloWorld for Skyrim VR
 
-# SKSE "Hello, world!"
+HelloWorld is an SKSE VR plugin that reports whether the active OpenVR headset
+connection is wired or wireless. It includes its own menu configuration for
+exposing the notification delay and Popup Message through SkyUI's Mod Configuration Menu (MCM).
 
-Very simple C++ SKSE plugin for Skyrim!
+The MCM's Papyrus script sends the selected delay and message text directly to
+the native plugin with `HelloWorld_MessageDelayChanged` and
+`HelloWorld_MessageTextChanged`. Delay changes replace the active countdown.
+Saved settings also load when a game loads or the mod's menu opens.
+Popup Message defaults to an empty string.
+Nonblank text replaces the headset connection messages; clearing it (or entering
+only whitespace) restores the default messages.
 
----
+SkyUI VR builds without MCM input-row support hide the editable text field. The
+visible **Popup Message (86 chars only)** heading displays the message in up to
+four rows of 32 characters. Values of exactly 86 characters are valid and remain
+unchanged. For longer values, the menu shows the first 86 characters followed by
+` [truncated]` (98 characters total). The plugin sends the first 86 characters
+to the popup; Skyrim's notification layout can visually clip the text earlier.
+Wrapping prefers word boundaries; if necessary,
+it packs text into rows and treats line breaks as spaces to fit the preview.
+UTF-8 characters are never split. The INI is read without rewriting its saved value.
+Select a message line for instructions: edit `sMessageText` under `[General]` in
+`Data/MCM/Settings/HelloWorld.ini`, then reopen the mod's menu to apply it.
+The message display reads the backing file on every menu open, so its displayed
+text updates too. The delay slider also reloads from the backing file on menu
+open, clamps to 10–600 seconds, and persists subsequent slider edits while
+preserving other settings. If a file cannot be read, the row retains its previous value
+and the failure is logged. Opening the menu does not rewrite the INI.
 
-- [SKSE "Hello, world!"](#skse-hello-world)
-- [What does it do?](#what-does-it-do)
-- [CommonLibSSE NG](#commonlibsse-ng)
-- [Requirements](#requirements)
-  - [Runtime requirements](#runtime-requirements)
-  - [Opening the project](#opening-the-project)
-- [Project setup](#project-setup)
-  - [Finding Your "`mods`" Folder](#finding-your-mods-folder)
+HelloWorld logs its DLL version, MCM asset paths and checks, menu script
+version, received callback values, and applied countdown generations in
+`SKSE/HelloWorld.log` under Skyrim VR's documents folder. Missing menu callbacks
+or asset mismatch errors help identify script/deployment conflicts on another PC.
 
-# What does it do?
+## Installation and mod requirements
 
-After running Skyrim, once at the Main Menu, press the `~` key to open the game console.
+HelloWorld requires Skyrim VR and the following separately installed mods:
 
-You will see that we printed `"Hello, world!"` to the console at the Main Menu 🐉
+1. [SKSEVR](https://skse.silverlock.org/)
+2. [SkyUI VR](https://github.com/Odie/skyui-vr)
+3. The Skyrim VR build of
+   [MCM Helper](https://www.nexusmods.com/skyrimspecialedition/mods/53000),
+   version 1.4.0 or later. MCM Helper is a separate mod and is not bundled in
+   the HelloWorld archive. Select its Skyrim VR component when installing it.
 
-# CommonLibSSE NG
+The headset notification also requires
+[SteamVR](https://store.steampowered.com/app/250820/SteamVR/) or a fully
+compatible OpenVR runtime.
 
-Because this uses [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG), it supports Skyrim SE, AE, GOG, and VR.
+Install the requirements above first. Then install the HelloWorld release
+archive with a mod manager and make sure `HelloWorld.esp` is enabled. The
+HelloWorld native plugin, compiled Papyrus script, MCM configuration, and SEQ
+file are included in its archive.
 
-[CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG) is a fork of the popular [powerof3 fork](https://github.com/powerof3/CommonLibSSE) of the _original_ `CommonLibSSE` library created by [Ryan McKenzie](https://github.com/Ryan-rsm-McKenzie) in [2018](https://github.com/Ryan-rsm-McKenzie/CommonLibSSE/commit/224773c424bdb8e36c761810cdff0fcfefda5f4a).
+If the MCM Helper native plugin is missing or too old, HelloWorld records an
+error in `Documents/My Games/Skyrim VR/SKSE/HelloWorld.log`. MCM Helper writes
+its own `MCMHelper.log` in the same directory when it is installed and loaded.
 
-# Requirements
+## Build requirements
 
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) (_the free Community edition_)
-- [`vcpkg`](https://github.com/microsoft/vcpkg)
-  - 1. Clone the repository using git OR [download it as a .zip](https://github.com/microsoft/vcpkg/archive/refs/heads/master.zip)
-  - 2. Go into the `vcpkg` folder and double-click on `bootstrap-vcpkg.bat`
-  - 3. Edit your system or user Environment Variables and add a new one:
-    - Name: `VCPKG_ROOT`  
-      Value: `C:\path\to\wherever\your\vcpkg\folder\is`
+- Windows 10 or later
+- Visual Studio 2022 with the **Desktop development with C++** workload
+- CMake 3.21 or later and Ninja
+- [vcpkg](https://github.com/microsoft/vcpkg), with `VCPKG_ROOT` set to its
+  installation directory
 
-<img src="https://raw.githubusercontent.com/SkyrimDev/Images/main/images/screenshots/Setting%20Environment%20Variables/VCPKG_ROOT.png" height="150">
+The normal C++ build does not require the Creation Kit. The compiled ESP and
+PEX are checked in under `mod/`; CMake validates the PEX's version and source
+hashes before packaging when no Papyrus compiler is configured.
 
-## Runtime requirements
+The Creation Kit is needed to change the quest in `HelloWorld.esp`. For Papyrus
+template edits or release version changes, configure the Papyrus compiler and
+run `RefreshMCMArtifact` to update the checked-in script and its stamp. See
+[Versioning](docs/contributing.md#versioning) for configuration and commands.
 
-The headset-connection detector requires Skyrim VR to be running through
-[SteamVR](https://store.steampowered.com/app/250820/SteamVR/) or another fully
-compatible OpenVR runtime.  If one cannot be detected the in game messenger will be confused.
+## Building
 
-## Opening the project
+Create `CMakeUserPresets.json` if you need machine-specific output paths; see
+[the contributing guide](docs/contributing.md). Then run:
 
-Once you have Visual Studio 2022 installed, you can open this folder in basically any C++ editor, e.g. [VS Code](https://code.visualstudio.com/) or [CLion](https://www.jetbrains.com/clion/) or [Visual Studio](https://visualstudio.microsoft.com/)
-- > _for VS Code, if you are not automatically prompted to install the [C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) and [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extensions, please install those and then close VS Code and then open this project as a folder in VS Code_
+```powershell
+cmake --preset release
+cmake --build --preset release
+ctest --test-dir build/release --output-on-failure
+```
 
-You may need to click `OK` on a few windows, but the project should automatically run CMake!
+The complete mod archive is written to:
 
-It will _automatically_ download [CommonLibSSE NG](https://github.com/CharmedBaryon/CommonLibSSE-NG) and everything you need to get started making your new plugin!
+```text
+build/packages/HelloWorld-<version>-SkyrimVR.7z
+```
 
-# Project setup
+Its installable payload contains:
 
-By default, when this project compiles it will output a .7z mod file to DEPLOY_FOLDER.  See [contributing](docs/contributing.md)
+```text
+HelloWorld.esp
+MCM/Config/HelloWorld/config.json
+MCM/Config/HelloWorld/settings.ini
+Scripts/HelloWorldMCM.pex
+Seq/HelloWorld.seq
+SKSE/Plugins/HelloWorld.dll
+```
 
-On build drag and drop the 7z file into the Vortex new mod section.
+For asset-only work, build the `HelloWorldAssets` target. More detail about the
+checked-in assets and quest attachment is in the
+[contributing guide](docs/contributing.md).

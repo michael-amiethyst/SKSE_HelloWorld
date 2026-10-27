@@ -1,0 +1,91 @@
+Scriptname HelloWorldMCM extends MCM_ConfigBase
+
+String Property MessageDelaySetting = "iMessageDelay:General" AutoReadOnly
+String Property MessageTextSetting = "sMessageText:General" AutoReadOnly
+String Property SettingsChangedEvent = "HelloWorld_SettingsChanged" AutoReadOnly
+String Property MenuMessageText = "" Auto
+Int Property MenuMessageDelay = 180 Auto
+
+Int[] messageLineOptions
+
+; Registered by the HelloWorld DLL; reads the INI instead of MCM Helper's cache.
+String Function ReadMenuMessageText(String currentText) Native
+Int Function ReadMenuMessageDelay(Int currentDelay) Native
+Bool Function WriteMenuMessageDelay(Int delay) Native
+Int Function GetMessageLineCount(String text) Native
+String Function GetMessageLine(String text, Int line) Native
+
+Event OnSettingChange(String a_ID)
+    Debug.Trace("[HelloWorld MCM @PROJECT_VERSION@] OnSettingChange: " + a_ID)
+    If a_ID == MessageDelaySetting
+        If WriteMenuMessageDelay(MenuMessageDelay)
+            SendModEvent("HelloWorld_MessageDelayChanged", a_ID, MenuMessageDelay)
+        Else
+            MenuMessageDelay = ReadMenuMessageDelay(MenuMessageDelay)
+        EndIf
+        RefreshMenu()
+    ElseIf a_ID == MessageTextSetting
+        MenuMessageText = GetModSettingString(a_ID)
+        SendModEvent("HelloWorld_MessageTextChanged", GetModSettingString(a_ID))
+        ForcePageReset()
+    EndIf
+EndEvent
+
+Event OnConfigOpen()
+    Parent.OnConfigOpen()
+    MenuMessageText = ReadMenuMessageText(MenuMessageText)
+    MenuMessageDelay = ReadMenuMessageDelay(MenuMessageDelay)
+    ForcePageReset()
+    Debug.Trace("[HelloWorld MCM @PROJECT_VERSION@] Menu opened")
+    SendModEvent("HelloWorld_MenuOpened", "@PROJECT_VERSION@")
+EndEvent
+
+Event OnPageReset(String a_page)
+    Parent.OnPageReset(a_page)
+    messageLineOptions = new Int[4]
+    Int lineCount = GetMessageLineCount(MenuMessageText)
+    Int line = 0
+    While line < 4
+        messageLineOptions[line] = -1
+        If line < lineCount
+            ; Use only the label field so there is no competing value and no
+            ; automatic uppercasing of the player's message.
+            messageLineOptions[line] = AddTextOption(GetMessageLine(MenuMessageText, line), "", 0)
+        EndIf
+        line += 1
+    EndWhile
+EndEvent
+
+Bool Function IsMessageLine(Int option)
+    If messageLineOptions == None
+        Return False
+    EndIf
+    Int line = 0
+    While line < messageLineOptions.Length
+        If messageLineOptions[line] == option
+            Return True
+        EndIf
+        line += 1
+    EndWhile
+    Return False
+EndFunction
+
+Event OnOptionSelect(Int a_option)
+    If IsMessageLine(a_option)
+        ShowMessageTextHelp()
+    Else
+        Parent.OnOptionSelect(a_option)
+    EndIf
+EndEvent
+
+Event OnOptionHighlight(Int a_option)
+    If IsMessageLine(a_option)
+        SetInfoText("Custom popup message. Select a line for INI editing instructions.")
+    Else
+        Parent.OnOptionHighlight(a_option)
+    EndIf
+EndEvent
+
+Function ShowMessageTextHelp()
+    Debug.MessageBox("SkyUI VR may hide text input fields. Edit sMessageText under [General] in Data/MCM/Settings/HelloWorld.ini, then reopen this menu to apply it. Leave it empty for default messages.")
+EndFunction

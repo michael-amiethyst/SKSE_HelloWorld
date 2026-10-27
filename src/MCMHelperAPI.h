@@ -1,0 +1,56 @@
+#pragma once
+
+#include <SimpleIni.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <functional>
+#include <mutex>
+#include <optional>
+#include <string>
+#include <string_view>
+
+class MCMHelperAPI
+{
+public:
+    using RuntimeVersionCallback = std::function<void(std::optional<std::uint32_t>)>;
+
+    static constexpr std::string_view PluginName = "MCMHelper";
+    static constexpr std::uint32_t MinimumVersion = 13;
+
+    explicit MCMHelperAPI(std::string modName, std::filesystem::path dataDirectory = "Data");
+
+    // Requests MCM Helper's public version code through its native Papyrus API. The callback
+    // receives nullopt when the VM or MCM.GetVersionCode is unavailable.
+    static void GetRuntimeVersion(RuntimeVersionCallback callback);
+
+    // Reloads defaults and user overrides from MCM Helper's INI files.
+    bool Reload();
+    // Read the backing file for the menu, bypassing MCM Helper's runtime cache.
+    // Keep the currently displayed value if the file cannot be loaded.
+    [[nodiscard]] std::string ReloadMenuMessageText(std::string_view currentText);
+    [[nodiscard]] std::int32_t ReloadMenuMessageDelay(std::int32_t currentDelay);
+    bool SaveMenuMessageDelay(std::int32_t delay);
+
+    [[nodiscard]] std::int32_t GetModSettingInt(std::string_view settingId,
+                                                std::int32_t defaultValue) const;
+    [[nodiscard]] double GetModSettingFloat(std::string_view settingId, double defaultValue) const;
+    [[nodiscard]] bool GetModSettingBool(std::string_view settingId, bool defaultValue) const;
+    [[nodiscard]] std::string GetModSettingString(std::string_view settingId,
+                                                  std::string_view defaultValue) const;
+
+private:
+    struct SettingKey
+    {
+        std::string section;
+        std::string name;
+    };
+
+    [[nodiscard]] static SettingKey ParseSettingId_(std::string_view settingId);
+    static bool LoadIfPresent_(CSimpleIniA& ini, const std::filesystem::path& path);
+
+    std::filesystem::path defaultsPath_;
+    std::filesystem::path settingsPath_;
+    mutable std::mutex mutex_;
+    CSimpleIniA ini_;
+};

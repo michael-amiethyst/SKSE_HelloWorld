@@ -1,7 +1,15 @@
 # Project Plan
 
-Emit message on high CPU/Memory/Disk/Network usage.
+Rename project
 
-Config menu for polling frequency
+Multiple message lines
+
+Static message on right hand side of menu
+
+Extended delays, hours/minutes/seconds
+
+Multiple messages and timers
+
+Emit message on high CPU/Memory/Disk/Network usage.
 
 Post to Nexus?
