@@ -2,6 +2,10 @@
 
 Rename project
 
+Multiple message lines
+
+Static message on right hand side of menu
+
 Extended delays, hours/minutes/seconds
 
 Multiple messages and timers
